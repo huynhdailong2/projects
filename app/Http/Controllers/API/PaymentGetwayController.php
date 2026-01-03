@@ -29,14 +29,13 @@ class PaymentGetwayController extends Controller
     {
         $this->client = new Client();
         // //momo
-        $this->momo_partner_code = "MOMOAR3G20211022";
-        $this->momo_secret_key = "KjeXxvqdKpUnfwwBannqYkqILsjdcJpj";
-        $this->momo_access_key = "z6TZJeskXV5DHal9";
-        $this->momo_redirect = "https://doan.dyca.vn/api/paymentGetwayDataMomo";
-        $this->momo_partner_name = "Myspa Dev";
-        $this->momo_base_url = "https://test-payment.momo.vn";
-        $this->momo_deep_link = "momo://?refId=dev_tool&tripId=GKX2SYA&tranxId=mipay_4179&appId=miniapp.TrkMv54nrF1g1UmRGp1i.myspaapp&deeplink=true&url=";
-        $this->momo_lang = \Config::get('app.locale', 'vi');
+          $this->momo_partner_code = \Config::get('services.momo.partner_code');
+        $this->momo_secret_key = \Config::get('services.momo.secret_key');
+        $this->momo_access_key = \Config::get('services.momo.access_key');
+        $this->momo_redirect = \Config::get('services.momo.redirect');
+        $this->momo_partner_name = \Config::get('services.momo.partner_name');
+        $this->momo_base_url = \Config::get('services.momo.base_url_v2');
+        $this->momo_deep_link = \Config::get('services.momo.deeplink');
         $this->momo_input_url = 'https://doan.dyca.vn/api/paymentGetwayDataMomo';
         $this->momo_client = new Client([
             'headers' => ['Content-Type' => 'application/json; charset=UTF-8'],

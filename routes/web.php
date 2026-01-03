@@ -27,12 +27,6 @@ Route::get('/login', [Controllers\UserController::class, 'logins'])->name('user.
 Route::get('/register-1', [Controllers\UserController::class, 'showRegisterForm'])->name('user.register.form');
 Route::post('/register-2', [Controllers\UserController::class, 'save'])->name('user.register.save');
 
-//checkout
-// Route::prefix('checkout')->group(function () {
-//     Route::get('/', [Controllers\CheckoutController::class, 'index'])->name('view.checkout.index');
-//     Route::post('/create', [Controllers\CheckoutController::class, 'create'])->name('view.checkout.create');
-// });
-
  Route::get('/profile', [Controllers\ProfileController::class, 'create']);
 Route::post('/profiles', [Controllers\ProfileController::class, 'store']);
 Route::get('/profile-user', [Controllers\ProfileController::class, 'show']);
