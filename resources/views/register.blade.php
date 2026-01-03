@@ -103,8 +103,12 @@
             @endif
 
             <button type="submit" class="btn btn-primary w-100">Register</button>
+            
         </form>
-        
+        <a href="{{ route('login.google') }}" class="btn-google w-100 mb-3">
+                                        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo">
+                                        <span>Continue with Google</span>
+                                    </a>
     </div>
 </body>
 </html>

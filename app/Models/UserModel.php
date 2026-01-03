@@ -14,5 +14,10 @@ class UserModel extends Model
     protected $fillable = ['username', 'password', 'fullname'];
     public $timestamps = false;
     use HasFactory;
+    public function profile()
+    {
+        return $this->hasOne(ProfileModel::class, 'user_id', 'id');
+    }
+
 }
 

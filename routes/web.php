@@ -14,8 +14,11 @@ Route::get('user/{id}/comment/{commentID}', function ($id, $commentID) {
     return "User id: $id and comment id: $commentID";
 });
 
+//login google
+Route::get('/login/google', [Controllers\GoogleLoginController::class, 'redirect'])
+    ->name('login.google');
 
-
+Route::get('/login/google/callback', [Controllers\GoogleLoginController::class, 'callback']);
 
 Route::get('/logout', [Controllers\UserController::class, 'logout'])->name('user.logout');
 Route::get('update-all-passwords', [Controllers\UserController::class, 'updateAllPasswords']);

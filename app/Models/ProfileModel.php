@@ -19,5 +19,9 @@ class ProfileModel extends Model
         'user_id', 'address', 'email', 'birthday', 'image', 'name','phone'
     ];
  
-    
+    public function user()
+    {
+        return $this->belongsTo(UserModel::class, 'user_id', 'id');
+    }
+
 }

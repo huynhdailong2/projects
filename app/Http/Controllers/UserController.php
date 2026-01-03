@@ -7,6 +7,7 @@ use App\Models\UserModel;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use App\Models\ProductModel;
+use App\Models\ProfileModel as Profile;
 class UserController extends Controller
 {
 
@@ -124,36 +125,65 @@ class UserController extends Controller
         return redirect('/')->with('success', 'Đăng xuất tài khoản thành công');
     }
     // Phương thức đăng nhập
+    // public function login(Request $request)
+    // {
+    //     // Lấy thông tin đăng nhập từ form
+    //     $username = $request->input('username');
+    //     $password = $request->input('password');
+    
+    //     // Kiểm tra thông tin đăng nhập
+    //     $user = UserModel::where('username', $username)->first();
+    
+    //     if ($user && Hash::check($password, $user->password)) {
+    //         // Lưu thông tin người dùng vào session
+    //         $request->session()->put('username', $username);
+    //         $request->session()->put('user_id', $user->id);
+    //         $request->session()->put('fullname', $user->fullname);
+    
+    //         // Kiểm tra xem user có phải là admin không
+    //         if (str_contains($username, 'admin')) {
+    //             $request->session()->put('is_admin', true);
+    //         } else {
+    //             $request->session()->put('is_admin', false);
+    //         }
+    
+    //         // Chuyển hướng đến trang /showlist hoặc trang home
+    //         return redirect('/');
+    //     } else {
+    //         // Quay lại trang đăng nhập với thông báo lỗi
+    //         return redirect()->back()->with('error', 'Tên đăng nhập hoặc mật khẩu không đúng.');
+    //     }
+    // }
     public function login(Request $request)
     {
-        // Lấy thông tin đăng nhập từ form
-        $username = $request->input('username');
+        $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        $login = $request->input('login');
         $password = $request->input('password');
-    
-        // Kiểm tra thông tin đăng nhập
-        $user = UserModel::where('username', $username)->first();
-    
-        if ($user && Hash::check($password, $user->password)) {
-            // Lưu thông tin người dùng vào session
-            $request->session()->put('username', $username);
-            $request->session()->put('user_id', $user->id);
-            $request->session()->put('fullname', $user->fullname);
-    
-            // Kiểm tra xem user có phải là admin không
-            if (str_contains($username, 'admin')) {
-                $request->session()->put('is_admin', true);
-            } else {
-                $request->session()->put('is_admin', false);
+        $user = UserModel::where('username', $login)->first();
+        if (!$user && filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $profile = Profile::where('email', $login)->first();
+            if ($profile) {
+                $user = UserModel::find($profile->user_id);
             }
-    
-            // Chuyển hướng đến trang /showlist hoặc trang home
-            return redirect('/');
-        } else {
-            // Quay lại trang đăng nhập với thông báo lỗi
-            return redirect()->back()->with('error', 'Tên đăng nhập hoặc mật khẩu không đúng.');
         }
+        if ($user && Hash::check($password, $user->password)) {
+            $request->session()->put('user_id', $user->id);
+            $request->session()->put('username', $user->username);
+            $request->session()->put('fullname', $user->fullname);
+            $request->session()->put(
+                'is_admin',
+                str_contains($user->username, 'admin')
+            );
+
+            return redirect('/');
+        }
+
+        return back()->with('error', 'Username / Email hoặc mật khẩu không đúng.');
     }
-    
 
 
     // Hiển thị trang đăng nhập

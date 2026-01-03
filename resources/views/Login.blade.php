@@ -191,13 +191,15 @@
                                     <h5 class="text-center">Sign into your account</h5>
 
                                     <div class="mb-4">
-                                        <label class="form-label">User name</label>
+                                        <label class="form-label">Username hoặc Email</label>
                                         <input type="text"
-                                               name="username"
-                                               class="form-control"
-                                               value="{{ old('username') }}"
-                                               required>
+                                            name="login"
+                                            class="form-control"
+                                            value="{{ old('login') }}"
+                                            placeholder="Nhập username hoặc email"
+                                            required>
                                     </div>
+
 
                                     <div class="mb-4">
                                         <label class="form-label">Password</label>
@@ -215,7 +217,10 @@
                                     <div class="divider">
                                         <span>OR</span>
                                     </div>
-
+                                    <a href="{{ route('login.google') }}" class="btn-google w-100 mb-3">
+                                        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo">
+                                        <span>Continue with Google</span>
+                                    </a>
                                     <p class="mt-4 text-center">
                                         Don't have an account?
                                         <a href="{{ route('user.register.form') }}" class="btn-register">

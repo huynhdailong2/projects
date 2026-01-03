@@ -46,5 +46,11 @@ return [
         'beautyx-protocol' => env('MOMO_BEAUTYX_PROTOCOL', 'beautyx://app'),
         'beautyx-zalo-protocol' => env('MOMO_BEAUTYX_ZALO_PROTOCOL'),
     ],
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+        'password' => env('GOOGLE_DEFAULT_PASSWORD'),
+    ],
 
 ];
