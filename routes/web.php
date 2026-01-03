@@ -2,9 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\StudViewController;
-
+use App\Http\Controllers;
+use App\Http\Controllers\API;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -18,29 +17,33 @@ Route::get('user/{id}/comment/{commentID}', function ($id, $commentID) {
 
 
 
-Route::get('/logout', [\App\Http\Controllers\UserController::class, 'logout'])->name('user.logout');
-Route::get('update-all-passwords', [\App\Http\Controllers\UserController::class, 'updateAllPasswords']);
+Route::get('/logout', [Controllers\UserController::class, 'logout'])->name('user.logout');
+Route::get('update-all-passwords', [Controllers\UserController::class, 'updateAllPasswords']);
 ; // Hiển thị form đăng nhập
-Route::post('login', [\App\Http\Controllers\UserController::class, 'login'])->name('user.login'); // Xử lý đăng nhập
+Route::post('login', [Controllers\UserController::class, 'login'])->name('user.login'); // Xử lý đăng nhập
 
-Route::get('/login', [\App\Http\Controllers\UserController::class, 'logins'])->name('user.logins');
+Route::get('/login', [Controllers\UserController::class, 'logins'])->name('user.logins');
 
-Route::get('/register-1', [\App\Http\Controllers\UserController::class, 'showRegisterForm'])->name('user.register.form');
-Route::post('/register-2', [\App\Http\Controllers\UserController::class, 'save'])->name('user.register.save');
+Route::get('/register-1', [Controllers\UserController::class, 'showRegisterForm'])->name('user.register.form');
+Route::post('/register-2', [Controllers\UserController::class, 'save'])->name('user.register.save');
 
+//checkout
+// Route::prefix('checkout')->group(function () {
+//     Route::get('/', [Controllers\CheckoutController::class, 'index'])->name('view.checkout.index');
+//     Route::post('/create', [Controllers\CheckoutController::class, 'create'])->name('view.checkout.create');
+// });
 
-
- Route::get('/profile', [ProfileController::class, 'create']);
-Route::post('/profiles', [ProfileController::class, 'store']);
-Route::get('/profile-user', [ProfileController::class, 'show']);
+ Route::get('/profile', [Controllers\ProfileController::class, 'create']);
+Route::post('/profiles', [Controllers\ProfileController::class, 'store']);
+Route::get('/profile-user', [Controllers\ProfileController::class, 'show']);
 
 
 // Route hiển thị trang chỉnh sửa profile (truyền id của profile vào)
-Route::get('/profiles/{id}/edit', [ProfileController::class, 'edit']);
+Route::get('/profiles/{id}/edit', [Controllers\ProfileController::class, 'edit']);
 
 
 // Route xử lý cập nhật profile sau khi chỉnh sửa
-Route::post('/cap-nhat-profile', [ProfileController::class, 'update']);
+Route::post('/cap-nhat-profile', [Controllers\ProfileController::class, 'update']);
 
 
 Route::get('/tat-ca-san-pham', function () {
@@ -48,96 +51,101 @@ Route::get('/tat-ca-san-pham', function () {
 })->middleware('auth'); // Trang cần đăng nhập
 
 
-// Route::post('user-login', [\App\Http\Controllers\UserController::class, 'login']);
-// Route::get('laydulieu', [\App\Http\Controllers\UserController::class, 'userLogin']);
+// Route::post('user-login', [Controllers\UserController::class, 'login']);
+// Route::get('laydulieu', [Controllers\UserController::class, 'userLogin']);
 
-Route::get('lay-data', [\App\Http\Controllers\UserController::class, 'list']);
+Route::get('lay-data', [Controllers\UserController::class, 'list']);
 
-Route::get('danh-sach', [\App\Http\Controllers\UserController::class, 'danhsach']);
-Route::get('thong-tin-user/{id?}', [\App\Http\Controllers\UserController::class, 'show']);
-Route::get('delete/{id?}', [\App\Http\Controllers\UserController::class, 'delete']);
-Route::get('add-user', [\App\Http\Controllers\UserController::class, 'add']);
-Route::post('/add-users', [\App\Http\Controllers\UserController::class, 'adduser']);
-Route::post('cap-nhat-user', [\App\Http\Controllers\UserController::class, 'update']);
+Route::get('danh-sach', [Controllers\UserController::class, 'danhsach']);
+Route::get('thong-tin-user/{id?}', [Controllers\UserController::class, 'show']);
+Route::get('delete/{id?}', [Controllers\UserController::class, 'delete']);
+Route::get('add-user', [Controllers\UserController::class, 'add']);
+Route::post('/add-users', [Controllers\UserController::class, 'adduser']);
+Route::post('cap-nhat-user', [Controllers\UserController::class, 'update']);
 //
 
 
-Route::get('danh-sach-danh-muc', [\App\Http\Controllers\CategoryController::class, 'list']);
-Route::get('xoa-danh-muc/{id?}', [\App\Http\Controllers\CategoryController::class, 'del']);
-Route::get('thong-tin-danh-muc/{id?}', [\App\Http\Controllers\CategoryController::class, 'show']);
-Route::post('cap-nhat-danh-muc', [\App\Http\Controllers\CategoryController::class, 'update']);
-Route::get('them-danh-muc', [\App\Http\Controllers\CategoryController::class, 'add']);
-Route::post('them-danh-muc', [\App\Http\Controllers\CategoryController::class, 'save']);
+Route::get('danh-sach-danh-muc', [Controllers\CategoryController::class, 'list']);
+Route::get('xoa-danh-muc/{id?}', [Controllers\CategoryController::class, 'del']);
+Route::get('thong-tin-danh-muc/{id?}', [Controllers\CategoryController::class, 'show']);
+Route::post('cap-nhat-danh-muc', [Controllers\CategoryController::class, 'update']);
+Route::get('them-danh-muc', [Controllers\CategoryController::class, 'add']);
+Route::post('them-danh-muc', [Controllers\CategoryController::class, 'save']);
 
 
 //sanpham
-Route::get('danh-sach-san-pham', [\App\Http\Controllers\ProductController::class, 'list']);
-Route::get('thong-tin-san-pham/{id?}', [\App\Http\Controllers\ProductController::class, 'show']);
-Route::get('them-san-pham', [\App\Http\Controllers\ProductController::class, 'add']);
-Route::post('them-san-pham', [\App\Http\Controllers\ProductController::class, 'save']);
-Route::get('xoa-san-pham/{id?}', [\App\Http\Controllers\ProductController::class, 'del']);
-Route::post('cap-nhat-san-pham', [\App\Http\Controllers\ProductController::class, 'update']);
-Route::get('product-detail/{id}', [\App\Http\Controllers\ProductController::class, 'ShowDetail']);
+Route::get('danh-sach-san-pham', [Controllers\ProductController::class, 'list']);
+Route::get('thong-tin-san-pham/{id?}', [Controllers\ProductController::class, 'show']);
+Route::get('them-san-pham', [Controllers\ProductController::class, 'add']);
+Route::post('them-san-pham', [Controllers\ProductController::class, 'save']);
+Route::get('xoa-san-pham/{id?}', [Controllers\ProductController::class, 'del']);
+Route::post('cap-nhat-san-pham', [Controllers\ProductController::class, 'update']);
+Route::get('product-detail/{id}', [Controllers\ProductController::class, 'ShowDetail']);
 
 
 
 
 
-Route::post('/add-to-cart', [\App\Http\Controllers\ProductController::class, 'addToCart'])->name('addToCart');
+Route::post('/add-to-cart', [Controllers\ProductController::class, 'addToCart'])->name('addToCart');
 
 
 
 // Route để lọc sản phẩm theo Category_name
-Route::get('/products/category/{category}', [\App\Http\Controllers\ProductController::class, 'filterByCategory'])->name('products.filter');
+Route::get('/products/category/{category}', [Controllers\ProductController::class, 'filterByCategory'])->name('products.filter');
 
 
 
-Route::get('tat-ca-san-pham', [\App\Http\Controllers\ProductController::class, 'showAllProducts']);
+Route::get('tat-ca-san-pham', [Controllers\ProductController::class, 'showAllProducts']);
 //
-Route::get('/', [\App\Http\Controllers\ProductController::class, 'showAllList']);
+Route::get('/', [Controllers\ProductController::class, 'showAllList']);
 // web.php
 
 //     order: 
+Route::prefix('paymentgateways')->group(function () {
+    Route::get('/{id}', [Controllers\API\PaymentGetwayController::class, 'status'])->name('view.paymentgateways.status');
+});
 
-Route::get('checkout', [\App\Http\Controllers\OrderController::class, 'checkout'])->name('checkout');
-Route::get('/order-details', [\App\Http\Controllers\OrderController::class, 'orderDetails'])->name('order.details');
-Route::post('/order/finalize', [\App\Http\Controllers\OrderController::class, 'finalize'])->name('order.finalize');
-Route::get('order/details/{order_id}', [\App\Http\Controllers\OrderController::class, 'getOrderDetails']);
+Route::get('api/paymentGetwayDataMomo', [API\PaymentGetwayController::class, 'paymentGetwayDataMomo'])->name('paymentGetwayDataMomo.index');
+Route::get('checkout', [Controllers\OrderController::class, 'checkout'])->name('checkout');
+
+Route::get('/order-details', [Controllers\OrderController::class, 'orderDetails'])->name('order.details');
+Route::post('/order/finalize', [Controllers\OrderController::class, 'finalize'])->name('order.finalize');
+Route::get('order/details/{order_id}', [Controllers\OrderController::class, 'getOrderDetails']);
 // Route cho việc cập nhật trạng thái vận chuyển cho tất cả các đơn hàng
 // Route cho việc cập nhật trạng thái vận chuyển
-Route::post('/order/{order_id}/update-shipping', [\App\Http\Controllers\OrderController::class, 'updateShipping'])->name('order.updateShipping');
+Route::post('/order/{order_id}/update-shipping', [Controllers\OrderController::class, 'updateShipping'])->name('order.updateShipping');
 
 // Route cho việc cập nhật trạng thái thanh toán
-Route::post('/order/{order_id}/update-payment-status', [\App\Http\Controllers\OrderController::class, 'updatePaymentStatus'])->name('order.updatePaymentStatus');
+Route::post('/order/{order_id}/update-payment-status', [Controllers\OrderController::class, 'updatePaymentStatus'])->name('order.updatePaymentStatus');
 
 // Route để cập nhật trạng thái thanh toán và vận chuyển
-Route::post('/order/updateStatusAndShipping/{order_id}', [\App\Http\Controllers\OrderController::class, 'updateStatusAndShipping'])->name('order.updateStatusAndShipping');
+Route::post('/order/updateStatusAndShipping/{order_id}', [Controllers\OrderController::class, 'updateStatusAndShipping'])->name('order.updateStatusAndShipping');
 
-Route::get('danh-sach-dat-hang', [\App\Http\Controllers\OrderController::class, 'list']);
+Route::get('danh-sach-dat-hang', [Controllers\OrderController::class, 'list']);
 // routes/web.php
 // routes/web.php
 // Đảm bảo route định nghĩa đúng tham số
-Route::post('order/remove/{order_id}/{product_id}', [\App\Http\Controllers\OrderController::class, 'remove'])->name('order.remove');
+Route::post('order/remove/{order_id}/{product_id}', [Controllers\OrderController::class, 'remove'])->name('order.remove');
 
 
-Route::get('order', [\App\Http\Controllers\OrderController::class, 'list'])->name('order.list');
+Route::get('order', [Controllers\OrderController::class, 'list'])->name('order.list');
 // Route hiển thị giỏ hàng
-Route::get('cart', [\App\Http\Controllers\CartController::class, 'show'])->name('cart.show');
+Route::get('cart', [Controllers\CartController::class, 'show'])->name('cart.show');
 
 // Route thêm sản phẩm vào giỏ hàng
-Route::post('cart/add/{Product_ID}', [\App\Http\Controllers\CartController::class, 'add'])->name('cart.add');
+Route::post('cart/add/{Product_ID}', [Controllers\CartController::class, 'add'])->name('cart.add');
 
 // Route xóa sản phẩm khỏi giỏ hàng
-Route::post('cart/remove/{Product_ID}', [\App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove');
+Route::post('cart/remove/{Product_ID}', [Controllers\CartController::class, 'remove'])->name('cart.remove');
 
-Route::post('cart/update/{Product_ID}', [\App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
-Route::post('/cart/update-all', [\App\Http\Controllers\CartController::class, 'updateAll'])->name('cart.updateAll');
+Route::post('cart/update/{Product_ID}', [Controllers\CartController::class, 'update'])->name('cart.update');
+Route::post('/cart/update-all', [Controllers\CartController::class, 'updateAll'])->name('cart.updateAll');
 
 
 // Đơn hàng
-Route::get('hoa-don/{id}', [\App\Http\Controllers\OrderController::class, 'showhoadon']);
+Route::get('hoa-don/{id}', [Controllers\OrderController::class, 'showhoadon']);
 
-Route::get('huy-don/{id}', [\App\Http\Controllers\OrderController::class, 'huydonhang']);
+Route::get('huy-don/{id}', [Controllers\OrderController::class, 'huydonhang']);
 
 // 
 

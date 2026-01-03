@@ -34,5 +34,17 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'momo' => [
+        'base_url_v2' => env('MOMO_BASE_URL_V2'),
+        'partner_code' => env('MOMO_PARTNER_CODE'),
+        'partner_name' => env('MOMO_PARTNER_NAME'),
+        'public_key' => env('MOMO_PUBLIC_KEY'),
+        'secret_key' => env('MOMO_SECRET_KEY'),
+        'access_key' => env('MOMO_ACCESS_KEY'),
+        'redirect' => env('MOMO_REDIRECT'),
+        'deeplink' => env('MOMO_DEEPLINK'),
+        'beautyx-protocol' => env('MOMO_BEAUTYX_PROTOCOL', 'beautyx://app'),
+        'beautyx-zalo-protocol' => env('MOMO_BEAUTYX_ZALO_PROTOCOL'),
+    ],
 
 ];

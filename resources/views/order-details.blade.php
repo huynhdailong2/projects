@@ -37,9 +37,14 @@
                     @foreach($order->orderDetails as $item)
                         <tr>
                             <td style="padding: 8px; border: 1px solid #dee2e6;">
-                                <img src="{{ asset($item->product->Img ?? 'default_image.jpg') }}" alt="{{ $item->product->Name }}" style="max-width: 100px;"/>
+                                <img 
+                                    src="{{ asset(optional($item->product)->Img ?? 'default_image.jpg') }}"
+                                    alt="{{ optional($item->product)->Name ?? 'No product' }}"
+                                    style="max-width: 100px;"
+                                />
+
                             </td>
-                            <td style="padding: 8px; border: 1px solid #dee2e6;">{{ $item->product->Name }}</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6;">{{ optional($item->product)->Name ?? 'No product' }}</td>
                             <td style="padding: 8px; border: 1px solid #dee2e6; color: #610000;">
                                 {{ number_format($item->Price, 0, ',', '.') }} VNĐ
                             </td>
@@ -51,16 +56,17 @@
             </table>
 
             <!-- Form chọn phương thức thanh toán, phương thức vận chuyển và ghi chú -->
-            <form action="{{ route('order.finalize') }}" method="POST" style="margin-top: 20px;">
+            <form style="margin-top: 20px;" id="checkout-form">
                 @csrf
                 
                 <!-- Phương thức thanh toán -->
                 <div style="margin-bottom: 15px;">
-                    <label for="payment_method" style="display: block; font-weight: bold;">Chọn phương thức thanh toán:</label>
-                    <select name="payment_method" id="payment_method" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;"  required>
-                        <option value="tiền mặt">Thanh toán khi nhận hàng</option>
-                        <option value="ngân hàng">Thanh toán online</option>
+                    <label for="payment_method_id" style="display: block; font-weight: bold;">Chọn phương thức thanh toán:</label>
+                    <select name="payment_method_id" id="payment_method_id" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;"  required>
+                        <option value="2">Thanh toán khi nhận hàng</option>
+                        <option value="1">Thanh toán MOMO</option>
                     </select>
+
                 </div>
 
                 <!-- Phương thức vận chuyển -->
@@ -82,13 +88,55 @@
                     <textarea name="note" id="note" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;" rows="3" placeholder="Nhập ghi chú cho đơn hàng"></textarea>
                 </div>
 
-                <button type="submit" style="background-color: #0d6efd; color: #fff; border: none; padding: 10px 20px; border-radius: 5px;">Gửi</button>
+                <button id="btn-submit" type="submit" style="background-color: #0d6efd; color: #fff; border: none; padding: 10px 20px; border-radius: 5px;">Gửi</button>
             </form>
-            
+            <div id="checkout-message" style="margin-top:15px;"></div>
         @else
             <p style="background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 5px; color: #856404;">Không có thông tin đơn hàng!</p>
         @endif
     </div>
 </body>
+<script>
+document.getElementById('checkout-form').addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const btn = document.getElementById('btn-submit');
+    const box = document.getElementById('checkout-message');
+    btn.disabled = true;
+    btn.innerText = 'Đang xử lý...';
+    box.innerHTML = '';
+
+    fetch("{{ route('order.finalize') }}", {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value,
+            'Accept': 'application/json'
+        },
+        body: new FormData(this)
+    })
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) throw data;
+        return data;
+    })
+    .then(data => {
+        if (data.redirect_url) {
+            window.location.href = data.redirect_url;
+            return;
+        }
+        box.innerHTML = `<div style="color:green">${data.message}</div>`;
+        btn.innerText = 'Hoàn tất';
+    })
+    .catch(err => {
+        let msg = err.message ?? 'Có lỗi xảy ra';
+        if (err.errors) {
+            msg = Object.values(err.errors).flat().join('<br>');
+        }
+        box.innerHTML = `<div style="color:red">${msg}</div>`;
+        btn.disabled = false;
+        btn.innerText = 'Gửi';
+    });
+});
+</script>
 @include('includes/footer') 
 </html>

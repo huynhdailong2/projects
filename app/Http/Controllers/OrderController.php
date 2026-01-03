@@ -5,7 +5,9 @@ use App\Models\OrderModel;
 use App\Models\OrderDetailModel;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-
+ use App\Models\PaymentMethod;
+use App\Models\OrderModel as Order;
+use App\Http\Controllers\CheckoutController;
 class OrderController extends Controller
 {
     public function getOrderDetails($order_id)
@@ -149,7 +151,10 @@ class OrderController extends Controller
             'user_id' => $user_id,
             'order_user' => $user_id,
             'created_at' => Carbon::now()->toDateTimeString(),
-            'payment' => 'Chưa thanh toán',
+            'payment_method_id' => PaymentMethod::METHOD_COD,
+            'amount' => array_sum(array_map(function ($item) {
+                return $item['Price'] * $item['quantity'];
+            }, $cart)),
             'shipping' => 'Chờ vận chuyển',
             'status' => 'Mới đặt hàng',
             'address' => '',
@@ -180,66 +185,148 @@ class OrderController extends Controller
 
 
     // Phương thức xử lý gửi thông tin thanh toán và ghi chú
+  
+
+    // public function finalize(Request $request)
+    // {
+    //     // 1. Kiểm tra giỏ hàng
+    //     $cart = session('cart', []);
+    //     if (empty($cart)) {
+    //         return back()->with('error', 'Giỏ hàng của bạn đang trống!');
+    //     }
+
+    //     // 2. Kiểm tra đăng nhập
+    //     $user_id = session('user_id');
+    //     if (!$user_id) {
+    //         return back()->with('error', 'Bạn cần đăng nhập để thanh toán!');
+    //     }
+
+    //     // 3. Lấy đơn hàng "Mới đặt hàng"
+    //     $order = Order::where('user_id', $user_id)
+    //         ->where('status', 'Mới đặt hàng')
+    //         ->first();
+
+    //     if (!$order) {
+    //         return back()->with('error', 'Không tìm thấy đơn hàng hợp lệ!');
+    //     }
+
+    //     // 4. Validate
+    //     $request->validate([
+    //         'payment_method_id' => 'required|exists:payment_methods,id',
+    //         'transport' => 'required|in:hỏa tốc,giao hàng nhanh,tiết kiệm',
+    //         'address' => 'required|string|max:255',
+    //         'note' => 'nullable|string|max:255',
+    //     ]);
+
+    //     try {
+    //         // 5. Gán thông tin đơn hàng
+    //         $order->payment_method_id = $request->payment_method_id;
+    //         $order->transport = $request->transport;
+    //         $order->address = $request->address;
+    //         $order->note = $request->note;
+    //         $order->save();
+
+    //         // 6. Lấy payment method
+    //         $paymentMethod = PaymentMethod::find($request->payment_method_id);
+
+    //         // =========================
+    //         // COD
+    //         // =========================
+    //         if ($paymentMethod->id == PaymentMethod::METHOD_COD) {
+
+    //             $order->status = 'Chưa thanh toán';
+    //             $order->save();
+
+    //             session()->forget('cart');
+
+    //             return redirect('/cart')->with(
+    //                 'success',
+    //                 'Đặt hàng thành công! Thanh toán khi nhận hàng.'
+    //             );
+    //         }
+
+    //         // =========================
+    //         // MOMO
+    //         // =========================
+    //         if ($paymentMethod->id == PaymentMethod::METHOD_MOMO) {
+
+    //             $order->status = 'Chờ thanh toán';
+    //             $order->save();
+
+    //             $checkout = app(CheckoutController::class);
+    //             $resp = $checkout->createPMGatewayMomo($order);
+
+    //             if (!isset($resp['payUrl'])) {
+    //                 return back()->with('error', 'Không thể khởi tạo thanh toán MOMO!');
+    //             }
+
+    //             session()->forget('cart');
+
+    //             // redirect sang MOMO
+    //             return redirect($resp['payUrl']);
+    //         }
+
+    //         return back()->with('error', 'Phương thức thanh toán không hợp lệ!');
+    //     } catch (\Exception $e) {
+    //         return back()->with('error', $e->getMessage());
+    //     }
+    // }
     public function finalize(Request $request)
     {
-        // Kiểm tra giỏ hàng trống
-        $cart = session('cart', []);
-        if (empty($cart)) {
-            return redirect()->back()->with('error', 'Giỏ hàng của bạn đang trống!');
+        if (!session('user_id')) {
+            return response()->json(['message' => 'Chưa đăng nhập'], 401);
         }
 
-        // Kiểm tra người dùng đã đăng nhập
-        $user_id = session('user_id');
-        if (!$user_id) {
-            return redirect()->back()->with('error', 'Bạn cần đăng nhập để thanh toán!');
-        }
-
-        // Tìm đơn hàng mới nhất của người dùng với trạng thái "Mới đặt hàng"
-        $order = OrderModel::where('user_id', $user_id)
+        $order = Order::where('user_id', session('user_id'))
             ->where('status', 'Mới đặt hàng')
             ->first();
 
         if (!$order) {
-            return redirect()->back()->with('error', 'Không tìm thấy đơn hàng hợp lệ!');
+            return response()->json(['message' => 'Không có đơn hàng'], 404);
         }
 
-        // Xác thực dữ liệu từ form
         $request->validate([
-            'payment_method' => 'required|in:tiền mặt,ngân hàng,hủy đơn', // Kiểm tra phương thức thanh toán
-            'note' => 'nullable|string|max:255', // Kiểm tra ghi chú
-            'transport' => 'required|in:hỏa tốc,giao hàng nhanh,tiết kiệm', // Kiểm tra phương thức vận chuyển
-            'address' => 'required|string|max:255', // Kiểm tra địa chỉ giao hàng
-            
+            'payment_method_id' => 'required',
+            'transport' => 'required',
+            'address' => 'required',
         ]);
 
-        try {
-            // Cập nhật phương thức thanh toán
-            $order->payment = $request->input('payment_method'); // Lấy phương thức thanh toán từ form
-            $order->note = $request->input('note'); // Lưu ghi chú (nếu có)
-            $order->address = $request->input('address'); // Lưu địa chỉ giao hàng (nếu có)
-            // Cập nhật phương thức vận chuyển vào trường 'transport'
-            $order->transport = $request->input('transport'); // Lưu phương thức vận chuyển vào trường transport
+        $order->update($request->only(
+            'payment_method_id',
+            'transport',
+            'address',
+            'note'
+        ));
 
-            // Cập nhật trạng thái đơn hàng
-            if ($request->input('payment_method') == 'tiền mặt') {
-                $order->status = 'Chưa thanh toán'; // Chưa thanh toán nếu chọn tiền mặt
-            } else {
-                $order->status = 'Đã thanh toán'; // Đã thanh toán nếu chọn ngân hàng
-            }
-
-            $order->save(); // Lưu thay đổi vào cơ sở dữ liệu
-
-            // Xóa giỏ hàng sau khi thanh toán
+        // COD
+        if ($request->payment_method_id == PaymentMethod::METHOD_COD) {
+            $order->status = 'Chưa thanh toán';
+            $order->save();
             session()->forget('cart');
 
-            // Lưu thông tin đơn hàng vào session
-            session()->put('order_details', $order);
-
-            return redirect('/cart')->with('success', 'Đơn hàng của bạn đã được thanh toán thành công!');
-        } catch (\Exception $e) {
-            // Xử lý lỗi
-            return redirect()->back()->with('error', 'Có lỗi xảy ra khi cập nhật đơn hàng: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Đặt hàng thành công – Thanh toán khi nhận hàng'
+            ]);
         }
+        // MOMO
+        if ($request->payment_method_id == PaymentMethod::METHOD_MOMO) {
+            $order->status = 'Chờ thanh toán';
+            $order->save();
+
+            $checkout = app(CheckoutController::class);
+            $resp = $checkout->createPMGatewayMomo($order);
+            if (!isset($resp['payUrl'])) {
+                return response()->json(['message' => 'Không tạo được giao dịch MOMO'], 500);
+            }
+
+            session()->forget('cart');
+
+            return response()->json([
+                'redirect_url' => $resp['payUrl']
+            ]);
+        }
+
+        return response()->json(['message' => 'Phương thức không hợp lệ'], 400);
     }
 
 
