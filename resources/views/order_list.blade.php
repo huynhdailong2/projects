@@ -232,28 +232,40 @@
                                 <td>{{ $item->Product_ID }}</td>
                                 <td>{{ number_format($item->Price, 0, ',', '.') }} VNĐ</td>
                                 <td>{{ $item->Quantily }}</td>
-                                <td>{{ $item->payment }}</td>
+                                <td>
+                                @switch($item->payment_method_id)
+                                    @case(\App\Models\PaymentMethod::METHOD_PAYPAL)
+                                        {{ \App\Models\PaymentMethod::METHOD_PAYPAL_NAME }}
+                                        @break
 
+                                    @case(\App\Models\PaymentMethod::METHOD_COD)
+                                        {{ \App\Models\PaymentMethod::METHOD_COD_NAME }}
+                                        @break
+
+                                    @default
+                                        Unknown
+                                @endswitch
+                                </td>
                                 <!-- Cập nhật trạng thái thanh toán -->
                                 <td>
                                     <form action="{{ route('order.updateStatusAndShipping', $item->order_id) }}" method="POST">
                                         @csrf
                                         <div class="mb-3" style="font-size: 12px; display: flex; align-items: center; gap: 10px;">
                                             <div style="display: flex; align-items: center; gap: 5px;">
-                                                <input type="radio" id="paid_{{ $item->order_id }}" name="status" value="Đã thanh toán"
-                                                    {{ $item->status == 'Đã thanh toán' ? 'checked' : '' }}>
+                                                <input type="radio" id="paid_{{ $item->order_id }}" name="status" value="PAID"
+                                                    {{ $item->status == 'PAID' ? 'checked' : '' }}>
                                                 <label for="paid_{{ $item->order_id }}">Đã thanh toán</label>
                                             </div>
 
                                             <div style="display: flex; align-items: center; gap: 5px;">
-                                                <input type="radio" id="unpaid_{{ $item->order_id }}" name="status" value="Chưa thanh toán"
-                                                    {{ $item->status == 'Chưa thanh toán' ? 'checked' : '' }}>
+                                                <input type="radio" id="unpaid_{{ $item->order_id }}" name="status" value="PENDING"
+                                                    {{ $item->status == 'PENDING' ? 'checked' : '' }}>
                                                 <label for="unpaid_{{ $item->order_id }}">Chưa thanh toán</label>
                                             </div>
 
                                             <div style="display: flex; align-items: center; gap: 5px;">
-                                                <input type="radio" id="cancel_{{ $item->order_id }}" name="status" value="Hủy đơn"
-                                                    {{ strtolower($item->status) == 'hủy đơn' ? 'checked' : '' }}>
+                                                <input type="radio" id="cancel_{{ $item->order_id }}" name="status" value="CANCELED"
+                                                    {{ strtolower($item->status) == 'CANCELED' ? 'checked' : '' }}>
                                                 <label for="cancel_{{ $item->order_id }}">Hủy đơn</label>
                                             </div>
                                         </div>

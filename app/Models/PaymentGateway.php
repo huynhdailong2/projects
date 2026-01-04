@@ -11,6 +11,7 @@ class PaymentGateway extends Model
 {
     use SoftDeletes;
 
+    CONST STATUS_NEW = 'NEW';
     CONST STATUS_PAID = 'PAID';
     CONST STATUS_ERROR = 'ERROR';
     CONST STATUS_PENDING = 'PENDING';

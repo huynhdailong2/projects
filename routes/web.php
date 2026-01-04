@@ -13,12 +13,15 @@ Route::get('/admin', function () {
 Route::get('user/{id}/comment/{commentID}', function ($id, $commentID) {
     return "User id: $id and comment id: $commentID";
 });
-
+Route::get('/payment/paypal/success', [Controllers\CheckoutController::class, 'paypalSuccess']);
+Route::get('/payment/paypal/cancel', [Controllers\CheckoutController::class, 'paypalCancel']);
 //login google
 Route::get('/login/google', [Controllers\GoogleLoginController::class, 'redirect'])
     ->name('login.google');
 
 Route::get('/login/google/callback', [Controllers\GoogleLoginController::class, 'callback']);
+
+
 
 Route::get('/logout', [Controllers\UserController::class, 'logout'])->name('user.logout');
 Route::get('update-all-passwords', [Controllers\UserController::class, 'updateAllPasswords']);

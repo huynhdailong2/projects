@@ -12,7 +12,9 @@ class PaymentMethod extends Model
     use SoftDeletes, HasFactory;
     const METHOD_MOMO = 1;
     const METHOD_COD = 2;
+    const METHOD_PAYPAL = 3;
     const METHOD_MOMO_NAME = "MOMO";
+    const METHOD_PAYPAL_NAME = "PAYPAL";
     const METHOD_COD_NAME = "COD";
     public $table = 'payment_methods';
     protected $dates = ['deleted_at', 'updated_at', 'created_at'];

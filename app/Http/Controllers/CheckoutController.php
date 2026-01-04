@@ -33,12 +33,16 @@ class CheckoutController extends Controller
     protected $momo_deep_link;
     protected $momo_lang;
     protected $momo_input_url;
+    protected $paypal_client;
+    protected $paypal_base_url;
+    protected $paypal_client_id;
+    protected $paypal_secret;
 
     public function __construct()
     {
         $this->client = new Client();
         //momo
-          $this->momo_partner_code = \Config::get('services.momo.partner_code');
+        $this->momo_partner_code = \Config::get('services.momo.partner_code');
         $this->momo_secret_key = \Config::get('services.momo.secret_key');
         $this->momo_access_key = \Config::get('services.momo.access_key');
         $this->momo_redirect = \Config::get('services.momo.redirect');
@@ -51,6 +55,18 @@ class CheckoutController extends Controller
             'http_errors' => false,
             'verify' => false,
         ]);
+        $this->paypal_client_id = config('services.paypal.client_id');
+        $this->paypal_secret = config('services.paypal.secret');
+        $this->paypal_base_url = config('services.paypal.base_url');
+
+        $this->paypal_client = new Client([
+            'auth' => [$this->paypal_client_id, $this->paypal_secret],
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
+            'http_errors' => false,
+        ]);
+
     }
     public function createPMGatewayMomo(Order $order)
     {
@@ -139,4 +155,218 @@ class CheckoutController extends Controller
     {
         return hash_hmac("sha256", $data, $this->momo_secret_key);
     }
+    private function getPaypalAccessToken()
+    {
+        $resp = $this->paypal_client->post(
+            $this->paypal_base_url . '/v1/oauth2/token',
+            [
+                'form_params' => [
+                    'grant_type' => 'client_credentials',
+                ],
+            ]
+        );
+
+        $data = json_decode($resp->getBody(), true);
+        return $data['access_token'] ?? null;
+    }
+    public function createPMGatewayPaypal(Order $order)
+    {
+        $accessToken = $this->getPaypalAccessToken();
+        if (!$accessToken) {
+            throw new \Exception('Không lấy được PayPal access token');
+        }
+
+        $reqData = [
+            'intent' => 'CAPTURE',
+            'purchase_units' => [
+                [
+                    'reference_id' => $order->order_id,
+                    'amount' => [
+                        'currency_code' => 'USD',
+                        'value' => number_format($order->amount, 2, '.', ''),
+                    ],
+                ],
+            ],
+            'application_context' => [
+                'return_url' => config('services.paypal.redirect'),
+                'cancel_url' => config('services.paypal.cancel'),
+            ],
+        ];
+
+        $pgh = PaymentGatewayHistory::create([
+            'event_name' => PaymentGatewayHistory::EVENT_CREATE_TRANSACTION,
+            'request_data' => $reqData,
+        ]);
+
+        // ✅ KHỞI TẠO BẰNG newModelInstance (KHÔNG create)
+        $this->paymentGateway = new PaymentGateway([
+            'status' => PaymentGateway::STATUS_PENDING,
+            'amount' => $order->amount,
+            'description' => 'PayPal payment',
+            'payment_method_id' => $order->payment_method_id,
+        ]);
+
+        // ✅ ASSOCIATE TRƯỚC
+        $this->paymentGateway->paymentable()->associate($order);
+        $this->paymentGateway->save();
+
+        $this->paymentGateway->paymentGatewayHistories()->save($pgh);
+
+        // Gọi PayPal
+        $resp = $this->paypal_client->post(
+            $this->paypal_base_url . '/v2/checkout/orders',
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $accessToken,
+                ],
+                RequestOptions::JSON => $reqData,
+            ]
+        );
+
+        $respData = json_decode($resp->getBody(), true);
+
+        $pgh->response_data = $respData;
+        $pgh->message = $respData['status'] ?? 'PAYPAL_CREATE_FAILED';
+        $pgh->save();
+
+        if (!isset($respData['status']) || $respData['status'] !== 'CREATED') {
+            $this->paymentGateway->status = PaymentGateway::STATUS_CANCELED;
+            $this->paymentGateway->paymentable->status = PaymentGateway::STATUS_CANCELED;
+            $this->paymentGateway->paymentable->save();
+            $this->paymentGateway->save();
+            return $respData;
+        }
+
+        // ✅ PAYPAL ORDER ID = transaction_uuid
+        $this->paymentGateway->transaction_uuid = $respData['id'];
+
+        foreach ($respData['links'] as $link) {
+            if ($link['rel'] === 'approve') {
+                $extra = $this->paymentGateway->extra_data ?? [];
+                $extra['approve_url'] = $link['href'];
+                $this->paymentGateway->extra_data = $extra;
+                break;
+            }
+        }
+
+        $this->paymentGateway->save();
+
+        return $respData;
+    }
+
+
+    public function paypalSuccess(Request $request)
+    {
+        $paypalOrderId = $request->get('token');
+        if (!$paypalOrderId) {
+            abort(400, 'Missing PayPal token');
+        }
+
+        // ✅ LẤY ĐÚNG PAYMENT GATEWAY
+        $pg = PaymentGateway::where('transaction_uuid', $paypalOrderId)->firstOrFail();
+
+        $pgh = PaymentGatewayHistory::create([
+            'event_name' => PaymentGatewayHistory::MSG_EVENT_CALLBACK_PAYPAL,
+            'request_data' => $request->all(),
+        ]);
+        $pg->paymentGatewayHistories()->save($pgh);
+
+        $accessToken = $this->getPaypalAccessToken();
+        if (!$accessToken) {
+            $pgh->message = 'PAYPAL_ACCESS_TOKEN_FAILED';
+            $pgh->save();
+            abort(500);
+        }
+
+        // 🔥 CAPTURE
+        $resp = $this->paypal_client->post(
+            $this->paypal_base_url . "/v2/checkout/orders/{$paypalOrderId}/capture",
+            [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $accessToken,
+                ],
+            ]
+        );
+
+        $respData = json_decode($resp->getBody(), true);
+
+        $pgh->response_data = $respData;
+        $pgh->save();
+
+        // ❌ Capture fail
+        if (!isset($respData['status']) || $respData['status'] !== 'COMPLETED') {
+            $pg->status = PaymentGateway::STATUS_CANCELED;
+            $pg->save();
+
+            $pg->paymentable->status = PaymentGateway::STATUS_CANCELED;
+            $pg->paymentable->save();
+
+            $pg->order->status = PaymentGateway::STATUS_CANCELED;
+            $pg->order->save();
+
+            $pgh->message = 'PAYPAL_CAPTURE_FAILED';
+            $pgh->save();
+
+            return redirect()->away(
+                'https://doan.dyca.vn/hoa-don/' . $pg->order->user_id
+            );
+        }
+
+        // ✅ Capture OK
+        $capture = $respData['purchase_units'][0]['payments']['captures'][0] ?? null;
+
+        $pg->status = PaymentGateway::STATUS_PAID;
+        $pg->transaction_id = $capture['id'] ?? null;
+        $pg->amount = $capture['amount']['value'] ?? $pg->amount;
+        $pg->save();
+
+        $pg->paymentable->status = PaymentGateway::STATUS_PAID;
+        $pg->paymentable->save();
+
+        $pg->order->status = PaymentGateway::STATUS_PAID;
+        $pg->order->save();
+
+        $pgh->message = PaymentGatewayHistory::MSG_CREATE_TRANSACTION_SUCCESS;
+        $pgh->save();
+
+        return redirect()->away(
+            'https://doan.dyca.vn/hoa-don/' . $pg->order->user_id
+        );
+    }
+
+    public function paypalCancel(Request $request)
+    {
+        $paypalOrderId = $request->get('token');
+
+        if (!$paypalOrderId) {
+            abort(400, 'Missing PayPal token');
+        }
+
+        $pg = PaymentGateway::where('transaction_uuid', $paypalOrderId)->firstOrFail();
+
+        $pgh = PaymentGatewayHistory::create([
+            'event_name' => PaymentGatewayHistory::MSG_EVENT_CANCEL_PAYPAL,
+            'request_data' => $request->all(),
+            'message' => PaymentGatewayHistory::MSG_CANCELED,
+        ]);
+        $pg->paymentGatewayHistories()->save($pgh);
+
+        if ($pg->status !== PaymentGateway::STATUS_PAID) {
+
+            $pg->status = PaymentGateway::STATUS_CANCELED;
+            $pg->save();
+
+            $pg->paymentable->status = PaymentGateway::STATUS_CANCELED;
+            $pg->paymentable->save();
+
+            $pg->order->status = PaymentGateway::STATUS_CANCELED;
+            $pg->order->save();
+        }
+
+        return redirect()->away(
+            'https://doan.dyca.vn/hoa-don/' . $pg->order->user_id
+        );
+    }
+
+
 }

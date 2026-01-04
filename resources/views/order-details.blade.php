@@ -64,7 +64,8 @@
                     <label for="payment_method_id" style="display: block; font-weight: bold;">Chọn phương thức thanh toán:</label>
                     <select name="payment_method_id" id="payment_method_id" style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px;"  required>
                         <option value="2">Thanh toán khi nhận hàng</option>
-                        <option value="1">Thanh toán MOMO</option>
+                        <!-- <option value="1">Thanh toán MOMO</option> -->
+                        <option value="3">Thanh toán Paypal</option>
                     </select>
 
                 </div>

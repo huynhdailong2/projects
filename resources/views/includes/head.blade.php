@@ -141,9 +141,12 @@
                         <li>
                             <a href="/contact-form">Liên hệ</a>
                         </li>
-                        <li>
-                            <a href="/profile-user">Thông tin cá nhân</a>
-                        </li>
+                         @if(session()->has('user_id'))
+                            <li>
+                                <a href="/profile-user">Thông tin cá nhân</a>
+                            </li>
+                        @endif
+
                     </ul>
                 </div>
 

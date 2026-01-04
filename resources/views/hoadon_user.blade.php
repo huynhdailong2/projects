@@ -243,10 +243,40 @@
                         <tr>
                             <td>{{ $item->order_id }}</td>
                             <td>{{ $item->created_at }}</td>
-                            <td>{{ $item->payment }}</td>
                             <td>
-                                {{ $item->status }}
+                                @switch($item->payment_method_id)
+                                    @case(\App\Models\PaymentMethod::METHOD_PAYPAL)
+                                        {{ \App\Models\PaymentMethod::METHOD_PAYPAL_NAME }}
+                                        @break
+
+                                    @case(\App\Models\PaymentMethod::METHOD_COD)
+                                        {{ \App\Models\PaymentMethod::METHOD_COD_NAME }}
+                                        @break
+
+                                    @default
+                                        Unknown
+                                @endswitch
                             </td>
+
+                            <td>
+                                @switch($item->status)
+                                    @case('PAID')
+                                        Đã thanh toán
+                                        @break
+
+                                    @case('PENDING')
+                                        Chờ thanh toán
+                                        @break
+
+                                    @case('CANCELED')
+                                        Đã hủy
+                                        @break
+
+                                    @default
+                                        Mới đặt hàng
+                                @endswitch
+                            </td>
+
 
                  
                             <td>

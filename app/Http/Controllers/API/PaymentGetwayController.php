@@ -63,14 +63,14 @@ class PaymentGetwayController extends Controller
                     $this->addCommission($paymentGateway->order);
                 }
             } else if ($request->vnp_TransactionStatus == PaymentGateway::TRANSACTION_STATUS_FAILED) {
-                if ($paymentGateway->paymentable->status != PaymentGateway::STATUS_CANCELED_BY_USER) {
+                if ($paymentGateway->paymentable->status != PaymentGateway::STATUS_CANCELED) {
                     $paymentGateway->transaction_id = $request->vnp_TransactionNo;
-                    $paymentGateway->status = PaymentGateway::STATUS_CANCELED_BY_USER;
+                    $paymentGateway->status = PaymentGateway::STATUS_CANCELED;
                     $paymentGateway->save();
-                    $paymentGateway->paymentable->status = PaymentGateway::STATUS_CANCELED_BY_USER;
+                    $paymentGateway->paymentable->status = PaymentGateway::STATUS_CANCELED;
                     $paymentGateway->paymentable->save();
                     $paymentGateway->paymentGatewayHistories()->create([
-                        "event_name" => PaymentGateway::STATUS_CANCELED_BY_USER,
+                        "event_name" => PaymentGateway::STATUS_CANCELED,
                         "message" => PaymentGatewayHistory::MSG_CANCELED,
                         "response_data" => $request->all()
                     ]);
@@ -164,13 +164,13 @@ class PaymentGetwayController extends Controller
         $pgh->response_data = $resp_data;
         $pgh->save();
         if ($resultCode != 0) {
-            $pg->status = PaymentGateway::STATUS_CANCELED_BY_USER;
+            $pg->status = PaymentGateway::STATUS_CANCELED;
             $pg->amount = $request->get('amount', 0);
             $pg->transaction_id = $request->get('transId');
             $pg->save();
-            $pg->paymentable->status = PaymentGateway::STATUS_CANCELED_BY_USER;
+            $pg->paymentable->status = PaymentGateway::STATUS_CANCELED;
             $pg->paymentable->save();
-            $pg->order->status = PaymentGateway::STATUS_CANCELED_BY_USER;
+            $pg->order->status = PaymentGateway::STATUS_CANCELED;
             $pg->order->save();
         } else if ($resultCode == 0) {
             $pg->status = PaymentGateway::STATUS_PAID;
@@ -182,7 +182,7 @@ class PaymentGetwayController extends Controller
             $pg->order->status = PaymentGateway::STATUS_PAID;
             $pg->order->save();
         }
-        return redirect()->away('https://doan.dyca.vn/user/order/detail/' . $pg->order->order_id);
+        return redirect()->away('https://doan.dyca.vn/hoa-don/' . $pg->order->order_id);
     }
     private function _hashData(string $data): string
     {

@@ -52,5 +52,12 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
         'password' => env('GOOGLE_DEFAULT_PASSWORD'),
     ],
+    'paypal' => [
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'secret' => env('PAYPAL_SECRET'),
+        'base_url' => env('PAYPAL_BASE_URL', 'https://api-m.sandbox.paypal.com'),
+        'redirect' => env('PAYPAL_REDIRECT_URL'),
+        'cancel' => env('PAYPAL_CANCEL_URL'),
+    ],
 
 ];

@@ -78,10 +78,8 @@ class ProfileController extends Controller
         $userId = session('user_id'); // Lấy user_id từ session
 
 
-
         // Tìm bản ghi profile của người dùng dựa vào user_id
         $item = ProfileModel::where('user_id', $userId)->first();
-
         //Nếu không tìm thấy bản ghi profile với user_id tương ứng, có thể trả về lỗi 404
         if (!$item) {
             return view('profile', compact('item'));

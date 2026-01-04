@@ -5,7 +5,8 @@ use App\Models\OrderModel;
 use App\Models\OrderDetailModel;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
- use App\Models\PaymentMethod;
+use App\Models\PaymentMethod;
+use App\Models\PaymentGateway;
 use App\Models\OrderModel as Order;
 use App\Http\Controllers\CheckoutController;
 class OrderController extends Controller
@@ -116,7 +117,8 @@ class OrderController extends Controller
     {
         // Sử dụng join đúng giữa bảng 'order' và 'order_detail'
         $items = OrderModel::join('order_detail', 'order_detail.order_id', '=', 'order.order_id')
-            ->select('order.*', 'order_detail.*') // Chọn tất cả các trường từ cả hai bảng
+            ->select('order.*', 'order_detail.*')
+            ->orderBy('order.order_id', 'desc') // Chọn tất cả các trường từ cả hai bảng
             ->get();
 
         return view('order_list', ['items' => $items]);
@@ -127,7 +129,7 @@ class OrderController extends Controller
     {
 
         // Sử dụng join đúng giữa bảng 'order' và 'order_detail'
-        $items = OrderModel::where('user_id', $id)->with('details.product')->get();
+        $items = OrderModel::where('user_id', $id)->with('details.product')->orderBy('order_id', 'desc')->get();
 
         return view('hoadon_user', ['items' => $items]);
     }
@@ -156,7 +158,7 @@ class OrderController extends Controller
                 return $item['Price'] * $item['quantity'];
             }, $cart)),
             'shipping' => 'Chờ vận chuyển',
-            'status' => 'Mới đặt hàng',
+            'status' => PaymentGateway::STATUS_NEW,
             'address' => '',
             'note' => '',
         ]);
@@ -278,7 +280,7 @@ class OrderController extends Controller
         }
 
         $order = Order::where('user_id', session('user_id'))
-            ->where('status', 'Mới đặt hàng')
+            ->where('status', PaymentGateway::STATUS_NEW)
             ->first();
 
         if (!$order) {
@@ -300,7 +302,7 @@ class OrderController extends Controller
 
         // COD
         if ($request->payment_method_id == PaymentMethod::METHOD_COD) {
-            $order->status = 'Chưa thanh toán';
+            $order->status = PaymentGateway::STATUS_PENDING;
             $order->save();
             session()->forget('cart');
 
@@ -310,7 +312,7 @@ class OrderController extends Controller
         }
         // MOMO
         if ($request->payment_method_id == PaymentMethod::METHOD_MOMO) {
-            $order->status = 'Chờ thanh toán';
+            $order->status = PaymentGateway::STATUS_PENDING;
             $order->save();
 
             $checkout = app(CheckoutController::class);
@@ -325,6 +327,31 @@ class OrderController extends Controller
                 'redirect_url' => $resp['payUrl']
             ]);
         }
+        // PayPal
+        if ($request->payment_method_id == PaymentMethod::METHOD_PAYPAL) {
+
+            $order->status = 'Chờ thanh toán';
+            $order->save();
+
+            $checkout = app(CheckoutController::class);
+            $resp = $checkout->createPMGatewayPaypal($order);
+            $approveUrl = collect($resp['links'] ?? [])
+                ->where('rel', 'approve')
+                ->first()['href'] ?? null;
+
+            if (!$approveUrl) {
+                return response()->json([
+                    'message' => 'Không tạo được giao dịch PayPal'
+                ], 500);
+            }
+
+            session()->forget('cart');
+
+            return response()->json([
+                'redirect_url' => $approveUrl
+            ]);
+        }
+
 
         return response()->json(['message' => 'Phương thức không hợp lệ'], 400);
     }
