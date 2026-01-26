@@ -40,4 +40,9 @@ class OrderModel extends Model
     {
         return $this->morphOne(PaymentGateway::class, 'paymentable');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

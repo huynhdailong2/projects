@@ -9,6 +9,10 @@ use App\Models\PaymentMethod;
 use App\Models\PaymentGateway;
 use App\Models\OrderModel as Order;
 use App\Http\Controllers\CheckoutController;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderMail;
+use App\Models\ProfileModel as Profile;
+
 class OrderController extends Controller
 {
     public function getOrderDetails($order_id)
@@ -305,7 +309,10 @@ class OrderController extends Controller
             $order->status = PaymentGateway::STATUS_PENDING;
             $order->save();
             session()->forget('cart');
-
+            $profile = Profile::where('user_id', session('user_id'))->first();
+            if($profile && $profile->email && filter_var($profile->email, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($profile->email)->send(new OrderMail($order));
+            }
             return response()->json([
                 'message' => 'Đặt hàng thành công – Thanh toán khi nhận hàng'
             ]);
@@ -346,7 +353,10 @@ class OrderController extends Controller
             }
 
             session()->forget('cart');
-
+            $profile = Profile::where('user_id', session('user_id'))->first();
+            if($profile && $profile->email && filter_var($profile->email, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($profile->email)->send(new OrderMail($order));
+            }
             return response()->json([
                 'redirect_url' => $approveUrl
             ]);
