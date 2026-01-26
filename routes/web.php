@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers;
 use App\Http\Controllers\API;
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -24,8 +25,7 @@ Route::get('/login/google/callback', [Controllers\GoogleLoginController::class, 
 
 
 Route::get('/logout', [Controllers\UserController::class, 'logout'])->name('user.logout');
-Route::get('update-all-passwords', [Controllers\UserController::class, 'updateAllPasswords']);
-; // Hiển thị form đăng nhập
+Route::get('update-all-passwords', [Controllers\UserController::class, 'updateAllPasswords']);; // Hiển thị form đăng nhập
 Route::post('login', [Controllers\UserController::class, 'login'])->name('user.login'); // Xử lý đăng nhập
 
 Route::get('/login', [Controllers\UserController::class, 'logins'])->name('user.logins');
@@ -33,7 +33,7 @@ Route::get('/login', [Controllers\UserController::class, 'logins'])->name('user.
 Route::get('/register-1', [Controllers\UserController::class, 'showRegisterForm'])->name('user.register.form');
 Route::post('/register-2', [Controllers\UserController::class, 'save'])->name('user.register.save');
 
- Route::get('/profile', [Controllers\ProfileController::class, 'create']);
+Route::get('/profile', [Controllers\ProfileController::class, 'create']);
 Route::post('/profiles', [Controllers\ProfileController::class, 'store']);
 Route::get('/profile-user', [Controllers\ProfileController::class, 'show']);
 
@@ -177,3 +177,54 @@ Route::get('laydanhsach', function () {
     print_r($data);
 });
 
+// ExampleController routes
+Route::get('example', [Controllers\ExampleController::class, 'example']);
+
+//product
+Route::prefix('product')->group(function () {
+    Route::post('/store', [Controllers\ExampleController::class, 'storeProduct'])->name('product.store');
+    Route::post('/update', [Controllers\ExampleController::class, 'updateProduct'])->name('product.update');
+    Route::post('/delete', [Controllers\ExampleController::class, 'deleteProduct'])->name('product.delete');
+});
+
+//category
+Route::prefix('category')->group(function () {
+    Route::post('/store', [Controllers\ExampleController::class, 'storeCategory'])->name('category.store');
+    Route::post('/update', [Controllers\ExampleController::class, 'updateCategory'])->name('category.update');
+    Route::post('/delete', [Controllers\ExampleController::class, 'deleteCategory'])->name('category.delete');
+});
+
+//contact
+Route::prefix('contact')->group(function () {
+    Route::post('/store', [Controllers\ExampleController::class, 'storeContact'])->name('contact.store');
+    Route::post('/update', [Controllers\ExampleController::class, 'updateContact'])->name('contact.update');
+    Route::post('/delete', [Controllers\ExampleController::class, 'deleteContact'])->name('contact.delete');
+});
+
+//user
+Route::prefix('user')->group(function () {
+    Route::post('/store', [Controllers\ExampleController::class, 'storeUser'])->name('user.store');
+    Route::post('/update', [Controllers\ExampleController::class, 'updateUser'])->name('user.update');
+    Route::post('/delete', [Controllers\ExampleController::class, 'deleteUser'])->name('user.delete');
+});
+
+//profile
+Route::prefix('profile')->group(function () {
+    Route::get('/store', [Controllers\ExampleController::class, 'storeProfile'])->name('profile.store');
+    Route::post('/update', [Controllers\ExampleController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/delete', [Controllers\ExampleController::class, 'deleteProfile'])->name('profile.delete');
+});
+
+//paymentgetway
+Route::prefix('paymentgetway')->group(function () {
+    Route::post('/store', [Controllers\ExampleController::class, 'storePaymentGetway'])->name('paymentgetway.store');
+    Route::post('/update', [Controllers\ExampleController::class, 'updatePaymentGetway'])->name('paymentgetway.update');
+    Route::post('/delete', [Controllers\ExampleController::class, 'deletePaymentGetway'])->name('paymentgetway.delete');
+});
+
+//order
+Route::prefix('order')->group(function () {
+    Route::post('/store', [Controllers\ExampleController::class, 'storeOrder'])->name('order.store');
+    Route::post('/update', [Controllers\ExampleController::class, 'updateOrder'])->name('order.update');
+    Route::post('/delete', [Controllers\ExampleController::class, 'deleteOrder'])->name('order.delete');
+});
