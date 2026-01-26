@@ -353,10 +353,6 @@ class OrderController extends Controller
             }
 
             session()->forget('cart');
-            $profile = Profile::where('user_id', session('user_id'))->first();
-            if($profile && $profile->email && filter_var($profile->email, FILTER_VALIDATE_EMAIL)) {
-                Mail::to($profile->email)->send(new OrderMail($order));
-            }
             return response()->json([
                 'redirect_url' => $approveUrl
             ]);

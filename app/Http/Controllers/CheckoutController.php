@@ -3,20 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Cart;
 use App\Models\OrderModel as Order;
-use App\Models\OrderDetailModel as OrderItem;
-use App\Models\ProductModel as Product;
-use App\Models\PaymentMethod;
 use App\Models\PaymentGateway;
 use App\Models\PaymentGatewayHistory;
-use App\Models\UserAddress;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
+use App\Models\ProfileModel as Profile;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderMail;
 
 class CheckoutController extends Controller
 {
@@ -198,7 +194,6 @@ class CheckoutController extends Controller
             'request_data' => $reqData,
         ]);
 
-        // ✅ KHỞI TẠO BẰNG newModelInstance (KHÔNG create)
         $this->paymentGateway = new PaymentGateway([
             'status' => PaymentGateway::STATUS_PENDING,
             'amount' => $order->amount,
@@ -206,7 +201,6 @@ class CheckoutController extends Controller
             'payment_method_id' => $order->payment_method_id,
         ]);
 
-        // ✅ ASSOCIATE TRƯỚC
         $this->paymentGateway->paymentable()->associate($order);
         $this->paymentGateway->save();
 
@@ -237,7 +231,6 @@ class CheckoutController extends Controller
             return $respData;
         }
 
-        // ✅ PAYPAL ORDER ID = transaction_uuid
         $this->paymentGateway->transaction_uuid = $respData['id'];
 
         foreach ($respData['links'] as $link) {
@@ -262,7 +255,6 @@ class CheckoutController extends Controller
             abort(400, 'Missing PayPal token');
         }
 
-        // ✅ LẤY ĐÚNG PAYMENT GATEWAY
         $pg = PaymentGateway::where('transaction_uuid', $paypalOrderId)->firstOrFail();
 
         $pgh = PaymentGatewayHistory::create([
@@ -277,8 +269,6 @@ class CheckoutController extends Controller
             $pgh->save();
             abort(500);
         }
-
-        // 🔥 CAPTURE
         $resp = $this->paypal_client->post(
             $this->paypal_base_url . "/v2/checkout/orders/{$paypalOrderId}/capture",
             [
@@ -292,8 +282,6 @@ class CheckoutController extends Controller
 
         $pgh->response_data = $respData;
         $pgh->save();
-
-        // ❌ Capture fail
         if (!isset($respData['status']) || $respData['status'] !== 'COMPLETED') {
             $pg->status = PaymentGateway::STATUS_CANCELED;
             $pg->save();
@@ -311,8 +299,6 @@ class CheckoutController extends Controller
                 'https://doan.dyca.vn/hoa-don/' . $pg->order->user_id
             );
         }
-
-        // ✅ Capture OK
         $capture = $respData['purchase_units'][0]['payments']['captures'][0] ?? null;
 
         $pg->status = PaymentGateway::STATUS_PAID;
@@ -328,7 +314,10 @@ class CheckoutController extends Controller
 
         $pgh->message = PaymentGatewayHistory::MSG_CREATE_TRANSACTION_SUCCESS;
         $pgh->save();
-
+        $profile = Profile::where('user_id', session('user_id'))->first();
+        if($profile && $profile->email && filter_var($profile->email, FILTER_VALIDATE_EMAIL)) {
+            Mail::to($profile->email)->send(new OrderMail($pg->order));
+        }
         return redirect()->away(
             'https://doan.dyca.vn/hoa-don/' . $pg->order->user_id
         );

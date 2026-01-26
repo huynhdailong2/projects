@@ -38,6 +38,22 @@
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td style="padding:8px 0;">Trạng thái: </td>
+                                    <td style="padding:8px 0;">
+                                        @if($order->status == \App\Models\PaymentGateway::STATUS_NEW)
+                                            Mới đặt
+                                        @elseif($order->status == \App\Models\PaymentGateway::STATUS_PENDING)
+                                            Đang xử lý
+                                        @elseif($order->status == \App\Models\PaymentGateway::STATUS_PAID)
+                                            Hoàn thành
+                                        @elseif($order->status == \App\Models\PaymentGateway::STATUS_CANCELED)
+                                            Đã hủy
+                                        @else
+                                            $order->status
+                                        @endif
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td style="padding:8px 0;">Phương thức thanh toán: </td>
                                     <td style="padding:8px 0;">{{$order?->paymentMethod->name_key}}</td>
                                 </tr>
