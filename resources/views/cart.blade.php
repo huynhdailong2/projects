@@ -205,13 +205,13 @@
                                 </td>
                                 <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">{{ $item['Name'] ?? 'Tên sản phẩm không xác định' }}</td>
                                 <td style="padding: 10px; text-align: center; border: 1px solid #ddd; color: #610000;">
-                                    {{ number_format($item['Price'] ?? 0, 0, ',', '.') }} VNĐ
+                                    {{ number_format($item['Price'] ?? 0, 0, ',', '.') }} USD
                                 </td>
                                 <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">
                                     <input type="number" name="cart[{{ $id }}][quantity]" value="{{ $item['quantity'] ?? 1 }}" min="1" style="width: 80px; height: 30px; text-align: center; border: 1px solid #ddd; border-radius: 4px;" />
                                 </td>
                                 <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">
-                                    {{ number_format(($item['Price'] ?? 0) * ($item['quantity'] ?? 1), 0, ',', '.') }} VNĐ
+                                    {{ number_format(($item['Price'] ?? 0) * ($item['quantity'] ?? 1), 0, ',', '.') }} USD
                                 </td>
                                 <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">
                                     <form action="{{ route('cart.remove', $id) }}" method="POST" style="display: inline;">
@@ -225,7 +225,7 @@
                 </table>
     
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-                    <h3 style="color: rgb(118, 4, 0); font-size: 21px; font-weight: bold;">Tổng cộng: {{ number_format($total, 0, ',', '.') }} VNĐ</h3>
+                    <h3 style="color: rgb(118, 4, 0); font-size: 21px; font-weight: bold;">Tổng cộng: {{ number_format($total, 0, ',', '.') }} USD</h3>
                     <button type="submit" style="font-size: 14px; padding: 8px 15px; background: #ffc107; border: none; border-radius: 5px; color: #333; cursor: pointer;">Cập nhật tất cả</button>
                 </div>
             </form>

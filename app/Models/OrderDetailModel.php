@@ -20,7 +20,7 @@
 
         // Mối quan hệ với ProductModel (sản phẩm)// Model OrderDetailModel
 
-        // Mối quan hệ với OrderModel (đơn hàng)
+        // Mối quan hệ với Order (đơn hàng)
         public function order()
         {
             return $this->belongsTo(OrderModel::class, 'order_id');

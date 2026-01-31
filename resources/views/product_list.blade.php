@@ -204,7 +204,7 @@
                                 <td><img src="{{ asset($item->Img) }}" alt="Product Image"></td>
                                 <td>{{ $item->Name }}</td>
                                 <td>{{ $item->Category_name }}</td>
-                                <td>{{ number_format($item->Price) }} VNĐ</td>
+                                <td>{{ number_format($item->Price) }} USD</td>
                                 <td>{{ $item->Quantily }}</td>
                                 <td>{{ $item->Description }}</td>
                                 <td>

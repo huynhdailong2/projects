@@ -94,7 +94,7 @@
     <div class="body-wrapper">
         <div class="container mt-5">
             <h1>Thêm danh mục</h1>
-            <form action="/them-danh-muc" method="post" class="mt-4">
+            <form action="/admin/them-danh-muc" method="post" class="mt-4">
                 @csrf
                 <table class="table table-hover">
                     <tr>

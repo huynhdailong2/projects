@@ -11,25 +11,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/json-viewer-js@1.0.0/json-viewer.css">
+<script src="https://cdn.jsdelivr.net/npm/json-viewer-js@1.0.0/json-viewer.js"></script>
+
 
     <style>
-        .flex-container {
-            display: flex;
-            gap: 20px;
-            /* Khoảng cách giữa các phần tử */
-            flex-wrap: wrap;
-            /* Đảm bảo các phần tử xuống hàng nếu không đủ không gian */
-            margin-bottom: 16px;
-            /* Khoảng cách phía dưới */
-        }
-
-        .flex-container p {
-            margin: 0;
-            /* Xóa khoảng cách mặc định của thẻ <p> */
-        }
-
-
         /* Reset body margins and paddings */
         body {
             margin: 0;
@@ -186,6 +174,33 @@
             /* Brighten icon on hover */
         }
 
+        .payment-log {
+            background: #0f172a;
+            /* dark slate */
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            max-height: 500px;
+            overflow: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .payment-log .event {
+            color: #38bdf8;
+            font-weight: bold;
+        }
+
+        .payment-log .request {
+            color: #4ade80;
+        }
+
+        .payment-log .response {
+            color: #facc15;
+        }
+
         /* Ensure all buttons are the same width and aligned on the same line */
         .d-flex {
             display: flex;
@@ -217,167 +232,111 @@
 
 <body>
     <!-- Include Dashboard (Assumes it contains the sidebar) -->
-    @include('includes/head')
+    @include('dashboard')
 
     <!-- Main Content -->
-    <div class="main-content " style="margin-top: 100px">
-        <h2 class="text-center">Đơn hàng của bạn</h2>
+    <div class="main-content">
         <div class="page-container">
+            <h1 class="text-center">Danh sách đặt hàng</h1>
 
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-bordered">
                     <thead>
                         <tr>
-                            <th>Mã Đơn Hàng</th>
-                            <th>Ngày tạo đơn</th>
-                            <th>Phương Thức Thanh Toán</th>
-                            <th>Trạng thái thanh toán</th>
-                            <th>Trạng thái vận chuyển</th>
-                            <th>Phương thức vận chuyển</th>
-                            <th>Ghi Chú</th>
-                            <th>Thao tác</th>
+                            <th>#</th>
+                            <th>Mã giao dịch</th>
+                            <th>Số tiền</th>
+                            <th>Trạng thái</th>
+                            <th>PTTT</th>
+                            <th>Order ID</th>
+                            <th>Khách hàng</th>
+                            <th>Ngày tạo</th>
+                            <th>Chi tiết thanh toán</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($items as $item)
+                        @foreach ($payments as $payment)
                         <tr>
-                            <td>{{ $item->order_id }}</td>
-                            <td>{{ $item->created_at }}</td>
+                            <td>{{ $payment->id }}</td>
+                            <td>{{ $payment->transaction_uuid }}</td>
+                            <td>{{ number_format($payment->amount) }} đ</td>
+                            <td>{{ $payment->status }}</td>
+                            <td>{{ $payment->paymentMethod?->name_key ?? 'N/A' }}</td>
                             <td>
-                                @switch($item->payment_method_id)
-                                    @case(\App\Models\PaymentMethod::METHOD_PAYPAL)
-                                        {{ \App\Models\PaymentMethod::METHOD_PAYPAL_NAME }}
-                                        @break
-
-                                    @case(\App\Models\PaymentMethod::METHOD_COD)
-                                        {{ \App\Models\PaymentMethod::METHOD_COD_NAME }}
-                                        @break
-
-                                    @default
-                                        Unknown
-                                @endswitch
+                                {{ $payment->paymentable_id ?? 'N/A' }}
                             </td>
 
                             <td>
-                                @switch($item->status)
-                                    @case('PAID')
-                                        Đã thanh toán
-                                        @break
-
-                                    @case('PENDING')
-                                        Chờ thanh toán
-                                        @break
-
-                                    @case('CANCELED')
-                                        Đã hủy
-                                        @break
-
-                                    @default
-                                        Mới đặt hàng
-                                @endswitch
+                                {{ $payment->order?->user?->fullname ?? 'N/A' }}
                             </td>
 
-
-                 
+                            <td>{{ $payment->created_at }}</td>
                             <td>
-                                {{ $item->shipping }}
-
-                            </td>
-                      
-                            <td>
-
-                                {{ $item->transport }}
-                            </td>
-
-                            <td>{{ $item->note }}</td>
-
-                            <!-- Thao tác -->
-                            <td>
-                                <div class="d-flex gap-2">
-
-                                    <form action="{{ url('huy-don/' . $item->order_id) }}" method="GET">
-                                        @csrf
-                                        <button type="submit" class="btn btn-danger"
-                                            onclick="return confirm('Hủy đơn hàng?')">Hủy đơn
-                                    </form>
-
-                                    <button class="btn btn-success" data-bs-toggle="modal"
-                                        data-bs-target="#orderDetailModal"
-                                        onclick="loadOrderDetails({{ $item->order_id }})"><i class="bi bi-eye"
-                                            style="color: #000000;"></i></button>
-                                </div>
-
+                                <button class="btn btn-success" data-bs-toggle="modal"
+                                    data-bs-target="#repuestDataModal"
+                                    onclick="loadRequestData({{ $payment->id }})"><i class="bi bi-eye"
+                                        style="color: #000000;"></i></button>
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
                 </table>
+
+                {{ $payments->links() }}
+
             </div>
         </div>
     </div>
 
-    <!-- Modal Chi tiết đơn hàng -->
-    <div style="margin-top: 100px" class="modal fade" id="orderDetailModal" tabindex="-1"
-        aria-labelledby="orderDetailModalLabel" aria-hidden="true">
+    <!-- Request Data Modal -->
+    <div class="modal fade" id="repuestDataModal" tabindex="-1" aria-labelledby="requestDataModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="orderDetailModalLabel">Chi tiết đơn hàng</h5>
+                    <h5 class="modal-title" id="requestDataModalLabel">Request Data</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="orderDetailContent">
-                    <!-- Nội dung chi tiết đơn hàng sẽ được thêm vào đây -->
+                <div class="modal-body">
+                    <<div id="requestDataContent" class="payment-log"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
-    @include('includes/footer')
+    <script>
+        function loadRequestData(paymentId) {
+            fetch(`/admin/payments/${paymentId}/request`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.length) {
+                        document.getElementById('requestDataContent').textContent = 'No data';
+                        return;
+                    }
+
+                    let html = '';
+
+                    data.forEach(item => {
+                        html += `
+                        Event: ${item.event_name}
+                        Time : ${item.created_at}
+                        Message : ${item.message ?? 'N/A'}
+                        Request data : ${JSON.stringify(item.request_data, null, 2)}
+                        Response data : ${JSON.stringify(item.response_data, null, 2)}
+                        `;
+                    });
+
+                    document.getElementById('requestDataContent').textContent = html;
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('requestDataContent').textContent = 'Error loading data';
+                });
+        }
+    </script>
+
 </body>
 
 </html>
-<script>
-    function loadOrderDetails(order_id) {
-        $.get("{{ url('order/details') }}/" + order_id, function(data) {
-            if (data.error) {
-                alert(data.error);
-            } else {
-                var content = `
-                <div class="flex-container">
-        <p><strong>Mã đơn hàng:</strong> ${data.order_id}</p>
-        <p><strong>Trạng thái thanh toán:</strong> ${data.payment}</p>
-        <p><strong>Địa chỉ:</strong> ${data.address}</p>
-        <p><strong>Ghi chú:</strong> ${data.note}</p>
-    </div>
-                    
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>ID Chi Tiết Đơn Hàng</th>
-                                <th>Tên Sản Phẩm</th>
-                  
-                                <th>Số Lượng</th>
-                                <th>Giá</th>
-                                <th>Tổng Tiền</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                `;
-                data.orderDetails.forEach(function(detail) {
-                    content += `
-                        <tr>
-                            <td>${detail.orderDetail_id}</td>  <!-- Hiển thị đúng trường orderDetail_id -->
-                            <td>${detail.product.name}</td>  <!-- Hiển thị đúng tên sản phẩm (Name) -->
-                      
-                            <td>${detail.Quantily}</td>
-                            <td>${detail.Price.toLocaleString('vi-VN')} USD</td>
-                            <td>${(detail.Quantily * detail.Price).toLocaleString('vi-VN')} USD</td>
-                        </tr>
-                    `;
-                });
-                content += "</tbody></table>";
-                // Thêm nội dung vào modal body
-                $("#orderDetailContent").html(content);
-            }
-        });
-    }
-</script>

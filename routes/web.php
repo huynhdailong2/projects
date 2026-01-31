@@ -8,8 +8,38 @@ use App\Http\Controllers\API;
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/admin', function () {
-    return view('dashboard');
+// Route::get('/admin', function () {
+//     return view('dashboard');
+// })->middleware('admin');
+Route::prefix('admin')->middleware('admin')->group(function () {
+    Route::get('/', function () {
+        return view('dashboard');
+    })->name('admin.dashboard');
+    Route::get('danh-sach-san-pham', [Controllers\ProductController::class, 'list'])->name('admin.products.list');
+    Route::get('danh-sach-danh-muc', [Controllers\CategoryController::class, 'list'])->name('admin.categories.list');
+    Route::get('danh-sach-dat-hang', [Controllers\OrderController::class, 'list'])->name('admin.orders.list');
+    Route::get('danh-sach-lien-he', [Controllers\ContactController::class, 'index'])->name('admin.contacts.list');
+    Route::get('danh-sach-nguoi-dung', [Controllers\UserController::class, 'danhsach'])->name('admin.users.list');
+    Route::get('danh-sach-thanh-toan', [Controllers\PaymentGatewayController::class, 'list'])->name('admin.payment.list');
+    Route::get('payments/{id}/request', [Controllers\PaymentGatewayController::class, 'paymentRequest'])->name('admin.payments.request');
+    Route::get('lay-data', [Controllers\UserController::class, 'list']);
+    Route::get('thong-tin-user/{id?}', [Controllers\UserController::class, 'show']);
+    Route::get('delete/{id?}', [Controllers\UserController::class, 'delete']);
+    Route::get('add-user', [Controllers\UserController::class, 'add']);
+    Route::post('/add-users', [Controllers\UserController::class, 'adduser']);
+    Route::post('cap-nhat-user', [Controllers\UserController::class, 'update']);
+    Route::get('xoa-danh-muc/{id?}', [Controllers\CategoryController::class, 'del']);
+    Route::get('thong-tin-danh-muc/{id?}', [Controllers\CategoryController::class, 'show']);
+    Route::post('cap-nhat-danh-muc', [Controllers\CategoryController::class, 'update']);
+    Route::get('them-danh-muc', [Controllers\CategoryController::class, 'add']);
+    Route::post('them-danh-muc', [Controllers\CategoryController::class, 'save']);
+
+    Route::get('thong-tin-san-pham/{id?}', [Controllers\ProductController::class, 'show']);
+    Route::get('them-san-pham', [Controllers\ProductController::class, 'add']);
+    Route::post('them-san-pham', [Controllers\ProductController::class, 'save']);
+    Route::get('xoa-san-pham/{id?}', [Controllers\ProductController::class, 'del']);
+    Route::post('cap-nhat-san-pham', [Controllers\ProductController::class, 'update']);
+    Route::get('product-detail/{id}', [Controllers\ProductController::class, 'ShowDetail']);
 });
 Route::get('user/{id}/comment/{commentID}', function ($id, $commentID) {
     return "User id: $id and comment id: $commentID";
@@ -21,7 +51,11 @@ Route::get('/login/google', [Controllers\GoogleLoginController::class, 'redirect
     ->name('login.google');
 
 Route::get('/login/google/callback', [Controllers\GoogleLoginController::class, 'callback']);
+Route::get('/forgot-password', [Controllers\Auth\ForgotPasswordController::class, 'showForgotForm'])->name('password.request');
+Route::post('/forgot-password', [Controllers\Auth\ForgotPasswordController::class, 'sendResetLink'])->name('password.email');
 
+Route::get('/reset-password/{token}', [Controllers\Auth\ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [Controllers\Auth\ForgotPasswordController::class, 'resetPassword'])->name('password.update');
 
 
 Route::get('/logout', [Controllers\UserController::class, 'logout'])->name('user.logout');
@@ -54,33 +88,6 @@ Route::get('/tat-ca-san-pham', function () {
 // Route::post('user-login', [Controllers\UserController::class, 'login']);
 // Route::get('laydulieu', [Controllers\UserController::class, 'userLogin']);
 
-Route::get('lay-data', [Controllers\UserController::class, 'list']);
-
-Route::get('danh-sach', [Controllers\UserController::class, 'danhsach']);
-Route::get('thong-tin-user/{id?}', [Controllers\UserController::class, 'show']);
-Route::get('delete/{id?}', [Controllers\UserController::class, 'delete']);
-Route::get('add-user', [Controllers\UserController::class, 'add']);
-Route::post('/add-users', [Controllers\UserController::class, 'adduser']);
-Route::post('cap-nhat-user', [Controllers\UserController::class, 'update']);
-//
-
-
-Route::get('danh-sach-danh-muc', [Controllers\CategoryController::class, 'list']);
-Route::get('xoa-danh-muc/{id?}', [Controllers\CategoryController::class, 'del']);
-Route::get('thong-tin-danh-muc/{id?}', [Controllers\CategoryController::class, 'show']);
-Route::post('cap-nhat-danh-muc', [Controllers\CategoryController::class, 'update']);
-Route::get('them-danh-muc', [Controllers\CategoryController::class, 'add']);
-Route::post('them-danh-muc', [Controllers\CategoryController::class, 'save']);
-
-
-//sanpham
-Route::get('danh-sach-san-pham', [Controllers\ProductController::class, 'list']);
-Route::get('thong-tin-san-pham/{id?}', [Controllers\ProductController::class, 'show']);
-Route::get('them-san-pham', [Controllers\ProductController::class, 'add']);
-Route::post('them-san-pham', [Controllers\ProductController::class, 'save']);
-Route::get('xoa-san-pham/{id?}', [Controllers\ProductController::class, 'del']);
-Route::post('cap-nhat-san-pham', [Controllers\ProductController::class, 'update']);
-Route::get('product-detail/{id}', [Controllers\ProductController::class, 'ShowDetail']);
 
 
 
@@ -121,7 +128,7 @@ Route::post('/order/{order_id}/update-payment-status', [Controllers\OrderControl
 // Route để cập nhật trạng thái thanh toán và vận chuyển
 Route::post('/order/updateStatusAndShipping/{order_id}', [Controllers\OrderController::class, 'updateStatusAndShipping'])->name('order.updateStatusAndShipping');
 
-Route::get('danh-sach-dat-hang', [Controllers\OrderController::class, 'list']);
+
 // routes/web.php
 // routes/web.php
 // Đảm bảo route định nghĩa đúng tham số
@@ -158,7 +165,7 @@ Route::get('/contact-form', [ContactController::class, 'show'])->name('contact.s
 Route::post('/submit-contact', [ContactController::class, 'save'])->name('contact.save');
 
 // Hiển thị danh sách liên hệ
-Route::get('/contact-list', [ContactController::class, 'index'])->name('contact.list');
+
 
 
 
@@ -178,13 +185,16 @@ Route::get('laydanhsach', function () {
 });
 
 // ExampleController routes
-Route::get('example', [Controllers\ExampleController::class, 'example']);
+Route::get('sql/queries', [Controllers\ExampleController::class, 'example']);
 
 //product
 Route::prefix('product')->group(function () {
     Route::post('/store', [Controllers\ExampleController::class, 'storeProduct'])->name('product.store');
     Route::post('/update', [Controllers\ExampleController::class, 'updateProduct'])->name('product.update');
     Route::post('/delete', [Controllers\ExampleController::class, 'deleteProduct'])->name('product.delete');
+    Route::post('/report', [Controllers\ExampleController::class, 'reportProduct'])->name('product.report');
+    Route::post('/total-product-price', [Controllers\ExampleController::class, 'totalProductPrice'])->name('user.totalProductPrice');
+    Route::post('/total-product-by-category', [Controllers\ExampleController::class, 'totalProductByCategory'])->name('user.totalProductByCategory');
 });
 
 //category
@@ -206,6 +216,10 @@ Route::prefix('user')->group(function () {
     Route::post('/store', [Controllers\ExampleController::class, 'storeUser'])->name('user.store');
     Route::post('/update', [Controllers\ExampleController::class, 'updateUser'])->name('user.update');
     Route::post('/delete', [Controllers\ExampleController::class, 'deleteUser'])->name('user.delete');
+    Route::post('/report', [Controllers\ExampleController::class, 'reportVipCustomer'])->name('user.reportVip');
+    Route::post('/birthday-discount', [Controllers\ExampleController::class, 'birthdayDiscount'])->name('user.birthdayDiscount');
+    Route::post('/promotion-special-day', [Controllers\ExampleController::class, 'promotionSpecialDay'])->name('user.promotionSpecialDay');
+    Route::post('/promotion-weekly', [Controllers\ExampleController::class, 'promotionWeekly'])->name('user.promotionWeekly');
 });
 
 //profile
@@ -227,4 +241,19 @@ Route::prefix('order')->group(function () {
     Route::post('/store', [Controllers\ExampleController::class, 'storeOrder'])->name('order.store');
     Route::post('/update', [Controllers\ExampleController::class, 'updateOrder'])->name('order.update');
     Route::post('/delete', [Controllers\ExampleController::class, 'deleteOrder'])->name('order.delete');
+    Route::post('/check', [Controllers\ExampleController::class, 'checkOrder'])->name('order.check');
+    Route::post('/cancel', [Controllers\ExampleController::class, 'cancelOrder'])->name('order.cancel');
 });
+
+//checkout
+Route::prefix('checkout')->group(function () {
+    Route::post('/store', [Controllers\ExampleController::class, 'storeCheckout'])->name('checkout.store');
+});
+Route::prefix('report')->group(function () {
+    Route::post('/revenue', [Controllers\ExampleController::class, 'reportRevenue'])->name('report.revenue');
+    Route::post('/revenue-average', [Controllers\ExampleController::class, 'reportRevenueAverage'])->name('report.revenueAverage');
+});
+Route::post('inventory-alert', [Controllers\ExampleController::class, 'inventoryAlert'])->name('inventory.alert');
+Route::post('check-password', [Controllers\ExampleController::class, 'checkPassword'])->name('check.password');
+Route::post('monthly-revenue-report-cursor', [Controllers\ExampleController::class, 'monthlyRevenueReportCursor'])->name('monthly.revenue.report.cursor');
+Route::post('best-selling-products', [Controllers\ExampleController::class, 'bestSellingProducts'])->name('best.selling.products');

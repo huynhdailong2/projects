@@ -46,10 +46,10 @@
                             </td>
                             <td style="padding: 8px; border: 1px solid #dee2e6;">{{ optional($item->product)->Name ?? 'No product' }}</td>
                             <td style="padding: 8px; border: 1px solid #dee2e6; color: #610000;">
-                                {{ number_format($item->Price, 0, ',', '.') }} VNĐ
+                                {{ number_format($item->Price, 0, ',', '.') }} USD
                             </td>
                             <td style="padding: 8px; border: 1px solid #dee2e6;">{{ $item->Quantily }}</td>
-                            <td style="padding: 8px; border: 1px solid #dee2e6;">{{ number_format($item->Price * $item->Quantily, 0, ',', '.') }} VNĐ</td>
+                            <td style="padding: 8px; border: 1px solid #dee2e6;">{{ number_format($item->Price * $item->Quantily, 0, ',', '.') }} USD</td>
                         </tr>
                     @endforeach
                 </tbody>

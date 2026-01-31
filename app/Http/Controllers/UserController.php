@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use App\Models\ProductModel;
 use App\Models\ProfileModel as Profile;
+
 class UserController extends Controller
 {
 
@@ -19,7 +20,7 @@ class UserController extends Controller
             'txt_password' => 'required|string|min:3',
             'txt_fullname' => 'required|string|max:255',
         ]);
-    
+
         try {
             // Tạo user mới
             UserModel::create([
@@ -27,7 +28,7 @@ class UserController extends Controller
                 'password' => Hash::make($request->txt_password),
                 'fullname' => $request->txt_fullname,
             ]);
-    
+
             return redirect()->back()->with('success', 'Thêm người dùng thành công!');
         } catch (\Exception $e) {
             return redirect()->back()
@@ -58,7 +59,7 @@ class UserController extends Controller
         $name = $request->input("txt_username");
         $fullname = $request->input("txt_fullname");
         $password = Hash::make($request->input("txt_password"));
-        UserModel::where('id', $id)->update(['username' => $name, 'fullname' => $fullname,'password'=>$password]);
+        UserModel::where('id', $id)->update(['username' => $name, 'fullname' => $fullname, 'password' => $password]);
         return redirect()->to('danh-sach');
     }
 
@@ -79,7 +80,7 @@ class UserController extends Controller
     //     return view('show_list', ['products' => $products]); // Trả về view all_products.blade.php với danh sách sản phẩm
     // }
     // Thêm người dùng mới
-    
+
     public function showRegisterForm()
     {
         return view('register'); // Giả sử bạn đã tạo view 'register.blade.php'
@@ -90,29 +91,47 @@ class UserController extends Controller
         $request->validate([
             'fullname' => 'required|string|max:255',
             'username' => 'required|string|unique:users,username|max:255',
-            'password' => 'required|string|min:3|confirmed',
+            'password' => [
+                'required',
+                'string',
+                'min:6',
+                'confirmed',
+                'regex:/[A-Z]/',            
+                'regex:/[a-z]/',            
+                'regex:/[0-9]/',           
+                'regex:/[^a-zA-Z0-9]/',    
+                function ($attribute, $value, $fail) use ($request) {
+                    if (stripos($value, $request->username) !== false) {
+                        $fail('Mật khẩu không được chứa username.');
+                    }
+                },
+            ],
+        ], [
+            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
+            'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
+            'password.regex' => 'Mật khẩu phải có chữ hoa, chữ thường, số và ký tự đặc biệt.',
         ]);
-    
+
         $fullname = $request->input('fullname');
         $username = $request->input('username');
         $password = $request->input('password');
-    
-        // Mã hóa mật khẩu trước khi lưu vào cơ sở dữ liệu
         $hashedPassword = Hash::make($password);
-    
-        // Thêm người dùng mới vào cơ sở dữ liệu
+        $user = UserModel::where('username', $username)->first();
+        if($user){
+            return redirect()->back()->with('error', 'Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.')->withInput();
+        }
         UserModel::create([
             'username' => $username,
             'fullname' => $fullname,
             'password' => $hashedPassword
         ]);
-    
-  
+
+
         return redirect()->route('user.logins')->with('success', 'Đăng ký thành công!');
     }
-    
-    
-    
+
+
+
     public function logout(Request $request)
     {
         $request->session()->forget('cart');
@@ -130,23 +149,23 @@ class UserController extends Controller
     //     // Lấy thông tin đăng nhập từ form
     //     $username = $request->input('username');
     //     $password = $request->input('password');
-    
+
     //     // Kiểm tra thông tin đăng nhập
     //     $user = UserModel::where('username', $username)->first();
-    
+
     //     if ($user && Hash::check($password, $user->password)) {
     //         // Lưu thông tin người dùng vào session
     //         $request->session()->put('username', $username);
     //         $request->session()->put('user_id', $user->id);
     //         $request->session()->put('fullname', $user->fullname);
-    
+
     //         // Kiểm tra xem user có phải là admin không
     //         if (str_contains($username, 'admin')) {
     //             $request->session()->put('is_admin', true);
     //         } else {
     //             $request->session()->put('is_admin', false);
     //         }
-    
+
     //         // Chuyển hướng đến trang /showlist hoặc trang home
     //         return redirect('/');
     //     } else {
@@ -215,5 +234,9 @@ class UserController extends Controller
         });
 
         return redirect()->back()->with('success', 'Mật khẩu của tất cả người dùng đã được cập nhật.');
+    }
+    public function forgot()
+    {
+        return view('front.forgot');
     }
 }

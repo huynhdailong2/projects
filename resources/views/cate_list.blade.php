@@ -112,7 +112,7 @@
         <div class="container">
             <h1>Danh sách danh mục</h1>
             <h2>
-                <a href="them-danh-muc" class="btn-add">
+                <a href="admin/them-danh-muc" class="btn-add">
                     <i class="fas fa-plus"></i> Thêm danh mục
                 </a>
             </h2>

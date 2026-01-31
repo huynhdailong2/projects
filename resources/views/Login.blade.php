@@ -222,16 +222,14 @@
                                         <span>Continue with Google</span>
                                     </a>
                                     <p class="mt-4 text-center">
-                                        Don't have an account?
+                                        Chưa có tài khoản?
                                         <a href="{{ route('user.register.form') }}" class="btn-register">
-                                            Register here
+                                            Đăng kí ngay
+                                        </a>
+                                        <a href="{{ route('password.request') }}" class="btn-register">
+                                            Quên mật khẩu
                                         </a>
                                     </p>
-
-                                    <div class="text-center">
-                                        <a href="#" class="small text-muted me-2">Terms of use</a>
-                                        <a href="#" class="small text-muted">Privacy policy</a>
-                                    </div>
                                 </form>
 
                             </div>

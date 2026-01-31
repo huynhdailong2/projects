@@ -194,7 +194,7 @@
 
                         <span class="stext-105 cl3" style="font-size: 14px; color: #999;">
                             <p class="product-price" style="font-size: 16px; color: #333; font-weight: 600;">
-                                {{ number_format($product->Price, 0, ',', '.') }} VNĐ
+                                {{ number_format($product->Price, 0, ',', '.') }} USD
                             </p>
                         </span>
                     </div>
@@ -211,15 +211,22 @@
                         </a>
                     </div>
                 </div>
-
+                @if($product->Quantily <= 0)
+                    <button type="submit"
+                        style="padding: 10px 20px; background-color: #ff5722; color: white; border: none; border-radius: 5px; 
+                                    cursor: pointer; font-size: 14px; width: 100%; text-align: center; transition: background-color 0.3s;">
+                        <i class="bi bi-cart-plus" style="margin-right: 8px;"></i> Hết hàng
+                    </button>
+                @else
                 <form action="{{ route('cart.add', $product->Product_ID) }}" method="POST" style="margin-top: 10px;">
                     @csrf
-                    <button type="submit" class="product-button"
+                    <button type="submit" class="product-button" @if($product->Quantily <= 0) disabled @endif
                         style="padding: 10px 20px; background-color: #ff5722; color: white; border: none; border-radius: 5px; 
                                    cursor: pointer; font-size: 14px; width: 100%; text-align: center; transition: background-color 0.3s;">
                         <i class="bi bi-cart-plus" style="margin-right: 8px;"></i> Thêm vào giỏ hàng
                     </button>
                 </form>
+                @endif
             </div>
         </div>
         @endforeach

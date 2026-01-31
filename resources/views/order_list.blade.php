@@ -230,7 +230,7 @@
                             <tr>
                                 <td>{{ $item->order_id }}</td>
                                 <td>{{ $item->Product_ID }}</td>
-                                <td>{{ number_format($item->Price, 0, ',', '.') }} VNĐ</td>
+                                <td>{{ number_format($item->Price, 0, ',', '.') }} USD</td>
                                 <td>{{ $item->Quantily }}</td>
                                 <td>
                                 @switch($item->payment_method_id)
@@ -265,7 +265,7 @@
 
                                             <div style="display: flex; align-items: center; gap: 5px;">
                                                 <input type="radio" id="cancel_{{ $item->order_id }}" name="status" value="CANCELED"
-                                                    {{ strtolower($item->status) == 'CANCELED' ? 'checked' : '' }}>
+                                                    {{ $item->status == 'CANCELED' ? 'checked' : '' }}>
                                                 <label for="cancel_{{ $item->order_id }}">Hủy đơn</label>
                                             </div>
                                         </div>
@@ -345,7 +345,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="orderDetailContent">
-                    <!-- Nội dung chi tiết đơn hàng sẽ được thêm vào đây -->
                 </div>
             </div>
         </div>
@@ -361,7 +360,7 @@
             } else {
                 var content = `
                     <p><strong>Mã đơn hàng:</strong> ${data.order_id}</p>
-                    <p><strong>Trạng thái thanh toán:</strong> ${data.payment}</p>
+                    <p><strong>Trạng thái thanh toán:</strong> ${data.status}</p>
                     <p><strong>Trạng thái vận chuyển:</strong> ${data.shipping}</p>
                     <p><strong>Địa chỉ:</strong> ${data.address}</p>
                     <p><strong>Ghi chú:</strong> ${data.note}</p>
@@ -386,8 +385,8 @@
                             <td>${detail.product.name}</td>  <!-- Hiển thị đúng tên sản phẩm (Name) -->
 
                             <td>${detail.Quantily}</td>
-                            <td>${detail.Price.toLocaleString('vi-VN')} VNĐ</td>
-                            <td>${(detail.Quantily * detail.Price).toLocaleString('vi-VN')} VNĐ</td>
+                            <td>${detail.Price.toLocaleString('vi-VN')} USD</td>
+                            <td>${(detail.Quantily * detail.Price).toLocaleString('vi-VN')} USD</td>
                         </tr>
                     `;
                 });

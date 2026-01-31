@@ -36,20 +36,20 @@
 
                             <span class="hide-menu">Home</span>
                         </li>
-                        <li class="sidebar-item">
+                        <!-- <li class="sidebar-item">
                             <a class="sidebar-link" href="./index.html" aria-expanded="false">
                                 <span>
                                     <i class="ti ti-layout-dashboard"></i>
                                 </span>
                                 <span class="hide-menu">Dashboard</span>
                             </a>
-                        </li>
+                        </li> -->
                         <li class="nav-small-cap">
                             <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
                             <span class="hide-menu">Quản lí </span>
                         </li>
                         <li class="sidebar-item">
-                            <a class="sidebar-link" href="/danh-sach-san-pham" aria-expanded="false">
+                            <a class="sidebar-link" href="{{ route('admin.products.list') }}" aria-expanded="false">
                                 <span>
                                     <i class="bi bi-cart"></i>
                                 </span>
@@ -57,7 +57,7 @@
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a class="sidebar-link" href="/danh-sach-danh-muc" aria-expanded="false">
+                            <a class="sidebar-link" href="{{ route('admin.categories.list') }}" aria-expanded="false">
                                 <span>
                                     <i class="bi bi-list-ul"></i>
                                 </span>
@@ -65,7 +65,7 @@
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a class="sidebar-link" href="/danh-sach-dat-hang" aria-expanded="false">
+                            <a class="sidebar-link" href="{{ route('admin.orders.list') }}" aria-expanded="false">
                                 <span>
                                     <i class="bi bi-list-ul"></i>
                                 </span>
@@ -73,7 +73,7 @@
                             </a>
                         </li>
                         <li class="sidebar-item">
-                            <a class="sidebar-link" href="/contact-list" aria-expanded="false">
+                            <a class="sidebar-link" href="{{ route('admin.contacts.list') }}" aria-expanded="false">
                                 <span>
                                     <i class="bi bi-list-ul"></i>
                                 </span>
@@ -82,11 +82,19 @@
                         </li>
 
                         <li class="sidebar-item">
-                            <a class="sidebar-link" href="/danh-sach" aria-expanded="false">
+                            <a class="sidebar-link" href="{{ route('admin.users.list') }}" aria-expanded="false">
                                 <span>
                                     <i class="bi bi-person"></i>
                                 </span>
                                 <span class="hide-menu">Danh sách người dùng</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-item">
+                            <a class="sidebar-link" href="{{ route('admin.payment.list') }}" aria-expanded="false">
+                                <span>
+                                    <i class="bi bi-person"></i>
+                                </span>
+                                <span class="hide-menu">Danh sách thanh toán</span>
                             </a>
                         </li>
 

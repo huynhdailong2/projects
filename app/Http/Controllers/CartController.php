@@ -15,12 +15,16 @@ class CartController extends Controller
     {
         // Lấy giỏ hàng từ session
         $cart = $request->session()->get('cart', []);
-    
         // Lấy dữ liệu cập nhật từ request
         $updatedCart = $request->input('cart', []);
     
         foreach ($updatedCart as $id => $data) {
             if (isset($cart[$id])) {
+                $product = ProductModel::where('Product_ID', $id)->first();
+                if(empty($product->Quantity) && $product->Quantity <= $data['quantity']){ 
+                    unset($cart[$id]);
+                    continue;
+                }
                 $quantity = max(1, intval($data['quantity'])); // Đảm bảo số lượng >= 1
                 $cart[$id]['quantity'] = $quantity;
                 // Kiểm tra dữ liệu sản phẩm có đầy đủ không

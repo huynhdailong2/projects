@@ -11,7 +11,7 @@ class UserModel extends Model
 {
     
     protected $table = 'users';
-    protected $fillable = ['username', 'password', 'fullname'];
+    protected $fillable = ['username', 'password', 'fullname','role'];
     public $timestamps = false;
     use HasFactory;
     public function profile()

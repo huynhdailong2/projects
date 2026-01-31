@@ -1,25 +1,27 @@
 <?php
 
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notification;
+
 class PaymentGateway extends Model
 {
     use SoftDeletes;
 
-    CONST STATUS_NEW = 'NEW';
-    CONST STATUS_PAID = 'PAID';
-    CONST STATUS_ERROR = 'ERROR';
-    CONST STATUS_PENDING = 'PENDING';
-    CONST STATUS_CANCELED = 'CANCELED';
-    CONST METHOD_VNPAY = 'VNPAY';
-    CONST TRANSACTION_STATUS_SUCCESS = 00;
-    CONST TRANSACTION_STATUS_FAILED = 02;
-    CONST STATUS_CANCELED_BY_USER = 'CANCELED_BY_USER';
+    const STATUS_NEW = 'NEW';
+    const STATUS_PAID = 'PAID';
+    const STATUS_ERROR = 'ERROR';
+    const STATUS_PENDING = 'PENDING';
+    const STATUS_CANCELED = 'CANCELED';
+    const METHOD_VNPAY = 'VNPAY';
+    const TRANSACTION_STATUS_SUCCESS = 00;
+    const TRANSACTION_STATUS_FAILED = 02;
+    const STATUS_CANCELED_BY_USER = 'CANCELED_BY_USER';
 
     protected $fillable = [
         'status',
@@ -60,6 +62,7 @@ class PaymentGateway extends Model
     {
         return $this->morphTo()->withTrashed();
     }
+
     public function order(): BelongsTo
     {
         return $this->belongsTo(OrderModel::class, 'paymentable_id');

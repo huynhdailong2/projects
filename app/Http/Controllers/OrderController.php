@@ -11,23 +11,23 @@ use App\Models\OrderModel as Order;
 use App\Http\Controllers\CheckoutController;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderMail;
+use App\Models\ProductModel;
 use App\Models\ProfileModel as Profile;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
     public function getOrderDetails($order_id)
     {
    
-        $order = OrderModel::with(['orderDetails.product'])->find($order_id);
+        $order = Order::with(['orderDetails.product'])->find($order_id);
 
         if (!$order) {
             return response()->json(['error' => 'Đơn hàng không tồn tại.'], 404);
         }
-
-        // Trả về dữ liệu đơn hàng và chi tiết dưới dạng JSON
         return response()->json([
             'order_id' => $order->order_id,
-            'payment' => $order->payment,
+            'status' => $order->status,
             'note' => $order->note,
             'shipping' => $order->shipping,
             'address' => $order->address,
@@ -50,7 +50,7 @@ class OrderController extends Controller
     {
         try {
             // Tìm đơn hàng theo ID
-            $order = OrderModel::findOrFail($order_id);
+            $order = Order::findOrFail($order_id);
 
             // Cập nhật trạng thái vận chuyển
             $order->shipping = $request->input('shipping');
@@ -67,7 +67,7 @@ class OrderController extends Controller
       
     
         // Tìm đơn hàng theo ID
-        $order = OrderModel::find($order_id);
+        $order = Order::find($order_id);
     
         // Kiểm tra nếu đơn hàng không tồn tại
         if (!$order) {
@@ -76,8 +76,23 @@ class OrderController extends Controller
     
         // Cập nhật trạng thái thanh toán
         $order->status = $request->input('status');
-    
-        // Cập nhật trạng thái vận chuyển
+        if( $request->input('status') == 'CANCELED' ){
+            $order->shipping = 'Đơn hàng đã bị hủy';
+            $order->status = $request->input('status');
+            $order->save();
+            $orderDetails = DB::table('order_detail')
+                ->where('order_id', $order_id)
+                ->get();
+            foreach ($orderDetails as $detail) {
+                DB::table('product')
+                    ->where('Product_ID', $detail->Product_ID)
+                    ->lockForUpdate()
+                    ->update([
+                        'Quantily' => DB::raw('Quantily + ' . (int) $detail->Quantily)
+                    ]);
+            }
+        }
+        $order->status = $request->input('status');
         $order->shipping = $request->input('shipping');
         $order->transport = $request->input('transport');
         // Lưu thay đổi vào cơ sở dữ liệu
@@ -91,7 +106,7 @@ class OrderController extends Controller
     {
         try {
             // Tìm đơn hàng theo ID
-            $order = OrderModel::findOrFail($order_id);
+            $order = Order::findOrFail($order_id);
 
             // Cập nhật trạng thái thanh toán
             $order->status = $request->input('status');
@@ -120,7 +135,7 @@ class OrderController extends Controller
     public function list(Request $request)
     {
         // Sử dụng join đúng giữa bảng 'order' và 'order_detail'
-        $items = OrderModel::join('order_detail', 'order_detail.order_id', '=', 'order.order_id')
+        $items = Order::join('order_detail', 'order_detail.order_id', '=', 'order.order_id')
             ->select('order.*', 'order_detail.*')
             ->orderBy('order.order_id', 'desc') // Chọn tất cả các trường từ cả hai bảng
             ->get();
@@ -133,7 +148,7 @@ class OrderController extends Controller
     {
 
         // Sử dụng join đúng giữa bảng 'order' và 'order_detail'
-        $items = OrderModel::where('user_id', $id)->with('details.product')->orderBy('order_id', 'desc')->get();
+        $items = Order::where('user_id', $id)->with('details.product')->orderBy('order_id', 'desc')->get();
 
         return view('hoadon_user', ['items' => $items]);
     }
@@ -153,7 +168,7 @@ class OrderController extends Controller
         }
 
         // Tạo đơn hàng mới
-        $order_id = OrderModel::insertGetId([
+        $order_id = Order::insertGetId([
             'user_id' => $user_id,
             'order_user' => $user_id,
             'created_at' => Carbon::now()->toDateTimeString(),
@@ -176,12 +191,20 @@ class OrderController extends Controller
                 'Quantily' => $item['quantity'],
                 'Price' => $item['Price'],
             ];
+            $product = ProductModel::where('Product_ID', $productId)->first();
+            if($product->Quantily < (int)$item['quantity']){
+                return redirect()->back()->with('error', 'Sản phẩm '.$product->Name.' không đủ số lượng trong kho!');
+            }
+            if($product) {
+                $product->Quantily -= (int)$item['quantity'];
+                $product->save();
+            }
         }
 
         OrderDetailModel::insert($orderDetails);
-
+        
         // Lưu thông tin đơn hàng vào session
-        $order = OrderModel::with('orderDetails.product')->where('order_id', $order_id)->first();
+        $order = Order::with('orderDetails.product')->where('order_id', $order_id)->first();
         session(['order_details' => $order]);
 
         // Chuyển hướng đến trang chi tiết đơn hàng
@@ -374,7 +397,7 @@ class OrderController extends Controller
 
             // Kiểm tra nếu không còn chi tiết nào, xóa đơn hàng
             if (OrderDetailModel::where('order_id', $order_id)->count() == 0) {
-                OrderModel::where('order_id', $order_id)->delete();
+                Order::where('order_id', $order_id)->delete();
             }
 
             return redirect()->route('order.list')->with('success', 'Xóa thành công!');
@@ -386,7 +409,7 @@ class OrderController extends Controller
     public function huydonhang(Request $request, $id)
     {
         // Tìm đơn hàng theo ID từ tham số
-        $order = OrderModel::find($id);
+        $order = Order::find($id);
 
         if (!$order) {
             // Nếu không tìm thấy đơn hàng, trả về lỗi hoặc thông báo phù hợp
